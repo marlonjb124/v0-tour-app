@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Search, Menu, X, MapPin } from "lucide-react"
+import { Search, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import Image from "next/image"
 
 export default function Navigation() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -15,12 +16,21 @@ export default function Navigation() {
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <MapPin className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="hidden sm:block">Tours España</span>
+          <Link href="/" className="flex items-center gap-2">
+            <Image
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ISOTIPO-jWZJH4MWlYyx4FUV2nZkZSXaAeX0uv.png"
+              alt="Peru Travel Logo"
+              width={32}
+              height={32}
+              className="w-8 h-8"
+            />
+            <Image
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/PERU%20TRAVEL%20LOGO%20BLANCO-6lUpdMD44IIc4UvFbZy0ntsBDgi1Nl.png"
+              alt="Peru Travel"
+              width={120}
+              height={24}
+              className="hidden sm:block h-6 w-auto"
+            />
           </Link>
 
           {/* Desktop Navigation */}

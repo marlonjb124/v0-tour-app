@@ -8,171 +8,169 @@ import { Card, CardContent } from "@/components/ui/card"
 import { useState } from "react"
 import Link from "next/link"
 
-// Static tour data matching the reference design
 const tours = [
   {
     id: 1,
-    title: "Sagrada Familia",
-    location: "BARCELONA",
-    city: "Barcelona",
-    description: "Ven a ver la obra maestra arquitectónica de Gaudí",
-    image: "/sagrada-familia-barcelona-architecture.png",
-    rating: 4.7,
-    reviews: 80309,
-    price: 33.8,
+    title: "Machu Picchu",
+    location: "CUSCO",
+    city: "Cusco",
+    description: "Descubre la ciudadela inca más famosa del mundo, Patrimonio de la Humanidad",
+    image: "/machu-picchu-ruins.png",
+    rating: 4.9,
+    reviews: 125000,
+    price: 85.0,
     originalPrice: null,
     discount: null,
   },
   {
     id: 2,
-    title: "Tours en bus turístico por Barcelona",
-    location: "BARCELONA",
-    city: "Barcelona",
-    description: "Explora los lugares más destacados de Barcelona a tu ritmo",
-    image: "/barcelona-tourist-bus-red-double-decker.png",
-    rating: 4.3,
-    reviews: 15450,
-    price: 22.0,
+    title: "Valle Sagrado de los Incas",
+    location: "CUSCO",
+    city: "Cusco",
+    description: "Explora los pueblos andinos y sitios arqueológicos del Valle Sagrado",
+    image: "/sacred-valley-peru-andes-mountains-terraces.png",
+    rating: 4.7,
+    reviews: 45230,
+    price: 65.0,
     originalPrice: null,
     discount: "HASTA -15%",
   },
   {
     id: 3,
-    title: "Park Güell",
-    location: "BARCELONA",
-    city: "Barcelona",
-    description: "Descubre el parque más famoso de Gaudí con vistas panorámicas de Barcelona",
-    image: "/park-g-ell-barcelona-colorful-mosaics.png",
-    rating: 4.5,
-    reviews: 45230,
-    price: 15.0,
-    originalPrice: null,
-    discount: null,
-  },
-  {
-    id: 4,
-    title: "Parque Warner Madrid",
-    location: "MADRID",
-    city: "Madrid",
-    description:
-      "Conoce a superhéroes y súbete a montañas rusas llenas de acción en el mejor parque temático de Madrid",
-    image: "/warner-bros-theme-park-madrid-superheroes.png",
-    rating: 4.4,
-    reviews: 1591,
-    price: 41.91,
-    originalPrice: null,
-    discount: null,
-  },
-  {
-    id: 5,
-    title: "Estadio Santiago Bernabéu",
-    location: "MADRID",
-    city: "Madrid",
-    description: "Ve uno de los estadios de fútbol con más historia de Madrid",
-    image: "/santiago-bernabeu-stadium-real-madrid.png",
-    rating: 4.4,
-    reviews: 5453,
-    price: 35.0,
-    originalPrice: null,
-    discount: null,
-  },
-  {
-    id: 6,
-    title: "Museo del Prado",
-    location: "MADRID",
-    city: "Madrid",
-    description: "Descubre las obras maestras del arte español en uno de los museos más importantes del mundo",
-    image: "/museo-del-prado-madrid-art-gallery.png",
+    title: "Sacsayhuamán",
+    location: "CUSCO",
+    city: "Cusco",
+    description: "Fortaleza inca con impresionantes muros de piedra y vistas panorámicas de Cusco",
+    image: "/sacsayhuaman-fortress-cusco-stone-walls.png",
     rating: 4.6,
-    reviews: 23450,
-    price: 18.0,
-    originalPrice: null,
-    discount: null,
-  },
-  {
-    id: 7,
-    title: "Alcázar de Sevilla",
-    location: "SEVILLA",
-    city: "Sevilla",
-    description: "Explora el palacio real más antiguo de Europa en uso, con jardines espectaculares",
-    image: "/alc-zar-sevilla-palace-gardens.png",
-    rating: 4.8,
-    reviews: 34567,
-    price: 13.5,
-    originalPrice: null,
-    discount: "HASTA -10%",
-  },
-  {
-    id: 8,
-    title: "Catedral de Sevilla",
-    location: "SEVILLA",
-    city: "Sevilla",
-    description: "Visita la catedral gótica más grande del mundo y sube a la Giralda",
-    image: "/sevilla-cathedral-giralda-tower.png",
-    rating: 4.7,
     reviews: 28900,
-    price: 12.0,
-    originalPrice: null,
-    discount: null,
-  },
-  {
-    id: 9,
-    title: "Terra Mítica",
-    location: "BENIDORM",
-    city: "Benidorm",
-    description: "Disfruta de las mejores atracciones temáticas en la Costa Blanca",
-    image: "/terra-mitica-benidorm-theme-park.png",
-    rating: 4.2,
-    reviews: 8750,
-    price: 32.0,
-    originalPrice: null,
-    discount: "HASTA -20%",
-  },
-  {
-    id: 10,
-    title: "Aqua Natura Benidorm",
-    location: "BENIDORM",
-    city: "Benidorm",
-    description: "Parque acuático con toboganes y piscinas para toda la familia",
-    image: "/aqua-natura-benidorm-water-park-slides.png",
-    rating: 4.0,
-    reviews: 5420,
     price: 25.0,
     originalPrice: null,
     discount: null,
   },
   {
-    id: 11,
-    title: "Ciudad de las Artes y las Ciencias",
-    location: "VALENCIA",
-    city: "Valencia",
-    description: "Complejo arquitectónico futurista con museos, planetario y oceanográfico",
-    image: "/valencia-city-arts-sciences-futuristic-architectur.png",
+    id: 4,
+    title: "Líneas de Nazca",
+    location: "ICA",
+    city: "Ica",
+    description: "Sobrevuela los misteriosos geoglifos de Nazca desde una avioneta",
+    image: "/nazca-lines-peru-desert-geoglyphs-aerial-view.png",
+    rating: 4.5,
+    reviews: 15670,
+    price: 120.0,
+    originalPrice: null,
+    discount: null,
+  },
+  {
+    id: 5,
+    title: "Oasis de Huacachina",
+    location: "ICA",
+    city: "Ica",
+    description: "Aventura en el desierto con sandboarding y paseos en buggy",
+    image: "/huacachina-oasis-desert-sand-dunes-peru.png",
+    rating: 4.4,
+    reviews: 12450,
+    price: 45.0,
+    originalPrice: null,
+    discount: "HASTA -20%",
+  },
+  {
+    id: 6,
+    title: "Islas Ballestas",
+    location: "ICA",
+    city: "Ica",
+    description: "Observa lobos marinos, pingüinos y aves en las Galápagos peruanas",
+    image: "/ballestas-islands-sea-lions-penguins-peru.png",
+    rating: 4.3,
+    reviews: 18750,
+    price: 35.0,
+    originalPrice: null,
+    discount: null,
+  },
+  {
+    id: 7,
+    title: "Centro Histórico de Lima",
+    location: "LIMA",
+    city: "Lima",
+    description: "Recorre la Lima colonial con sus iglesias y palacios virreinales",
+    image: "/lima-historic-center-colonial-architecture-cathedr.png",
+    rating: 4.2,
+    reviews: 34560,
+    price: 20.0,
+    originalPrice: null,
+    discount: null,
+  },
+  {
+    id: 8,
+    title: "Barranco y Miraflores",
+    location: "LIMA",
+    city: "Lima",
+    description: "Explora los distritos bohemios con vistas al Pacífico y gastronomía",
+    image: "/barranco-miraflores-lima-pacific-ocean-cliffs.png",
+    rating: 4.4,
+    reviews: 22100,
+    price: 30.0,
+    originalPrice: null,
+    discount: "HASTA -10%",
+  },
+  {
+    id: 9,
+    title: "Cañón del Colca",
+    location: "AREQUIPA",
+    city: "Arequipa",
+    description: "Observa cóndores andinos en uno de los cañones más profundos del mundo",
+    image: "/colca-canyon-condors-arequipa-peru-andes.png",
     rating: 4.6,
     reviews: 19800,
-    price: 28.0,
+    price: 75.0,
+    originalPrice: null,
+    discount: null,
+  },
+  {
+    id: 10,
+    title: "Monasterio de Santa Catalina",
+    location: "AREQUIPA",
+    city: "Arequipa",
+    description: "Ciudad dentro de la ciudad, monasterio colonial del siglo XVI",
+    image: "/santa-catalina-monastery-arequipa-colonial-archite.png",
+    rating: 4.5,
+    reviews: 16750,
+    price: 15.0,
+    originalPrice: null,
+    discount: null,
+  },
+  {
+    id: 11,
+    title: "Lago Titicaca",
+    location: "PUNO",
+    city: "Puno",
+    description: "Navega por el lago navegable más alto del mundo y visita islas flotantes",
+    image: "/lake-titicaca-floating-islands-uros-peru-bolivia.png",
+    rating: 4.7,
+    reviews: 28900,
+    price: 55.0,
     originalPrice: null,
     discount: null,
   },
   {
     id: 12,
-    title: "Oceanográfico Valencia",
-    location: "VALENCIA",
-    city: "Valencia",
-    description: "El acuario más grande de Europa con especies marinas de todo el mundo",
-    image: "/oceanographic-valencia-aquarium-marine-life.png",
-    rating: 4.5,
-    reviews: 15670,
-    price: 35.5,
+    title: "Islas Uros",
+    location: "PUNO",
+    city: "Puno",
+    description: "Conoce las islas artificiales de totora y la cultura ancestral uro",
+    image: "/uros-islands-reed-boats-titicaca-traditional-cultu.png",
+    rating: 4.3,
+    reviews: 21450,
+    price: 40.0,
     originalPrice: null,
     discount: "HASTA -15%",
   },
 ]
 
-const cities = ["Barcelona", "Madrid", "Sevilla", "Benidorm", "Valencia"]
+const cities = ["Cusco", "Lima", "Arequipa", "Ica", "Puno"]
 
 export default function HomePage() {
-  const [selectedCity, setSelectedCity] = useState("Barcelona")
+  const [selectedCity, setSelectedCity] = useState("Cusco")
 
   const filteredTours = tours.filter((tour) => tour.city === selectedCity)
 
@@ -184,7 +182,7 @@ export default function HomePage() {
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Imagen%20de%20WhatsApp%202025-08-24%20a%20las%2017.15.42_d24af432.jpg-G7NYM9lLI8K5LPIQwlxc3kNnoOxAo7.jpeg')`,
+            backgroundImage: `url('/machu-picchu-sunrise-andes-mountains-peru.png')`,
           }}
         >
           {/* Overlay for better text readability */}
@@ -193,9 +191,9 @@ export default function HomePage() {
 
         {/* Hero Content */}
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 font-sans">Más formas de descubrir la cultura</h1>
+          <h1 className="text-4xl md:text-6xl font-bold mb-4 font-sans">Descubre la magia del Perú</h1>
           <p className="text-lg md:text-xl mb-8 opacity-90">
-            Monumentos, atracciones y experiencias alucinantes. ¿Cuál será tu próxima aventura?
+            Sitios arqueológicos, paisajes andinos y experiencias únicas. ¿Cuál será tu próxima aventura?
           </p>
 
           {/* Search Bar */}
@@ -214,7 +212,7 @@ export default function HomePage() {
           {/* Trust Indicator */}
           <div className="mt-8 flex items-center justify-center gap-2 text-sm opacity-80">
             <div className="w-2 h-2 bg-green-400 rounded-full" />
-            <span>Más de 50.000.000 de viajeros han reservado con Tiqets</span>
+            <span>Más de 50.000.000 de viajeros han reservado con Peru Travel</span>
           </div>
         </div>
       </section>
@@ -250,7 +248,7 @@ export default function HomePage() {
               <div>
                 <h3 className="font-semibold text-lg mb-2">Descubre la cultura a tu manera</h3>
                 <p className="text-muted-foreground">
-                  Las mejores experiencias en museos y atracciones de todo el mundo
+                  Las mejores experiencias en sitios arqueológicos y atracciones de todo el Perú
                 </p>
               </div>
             </div>
@@ -261,7 +259,7 @@ export default function HomePage() {
       {/* Tours Section */}
       <section id="tours" className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold mb-8 text-center">Los mejores lugares para visitar en España</h2>
+          <h2 className="text-3xl font-bold mb-8 text-center">Los mejores lugares para visitar en Perú</h2>
 
           {/* City Filter Tabs */}
           <div className="flex flex-wrap justify-center gap-4 mb-12">
@@ -355,7 +353,7 @@ export default function HomePage() {
       {/* Second Tours Section */}
       <section className="py-16 px-4 bg-muted/30">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold mb-8 text-center">Los mejores lugares para visitar en España</h2>
+          <h2 className="text-3xl font-bold mb-8 text-center">Más destinos increíbles en Perú</h2>
 
           {/* City Filter Tabs - Second Instance */}
           <div className="flex flex-wrap justify-center gap-4 mb-12">
@@ -376,7 +374,7 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Second Tours Grid - Different tours for Madrid */}
+          {/* Second Tours Grid */}
           <div className="relative">
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredTours.map((tour) => (
