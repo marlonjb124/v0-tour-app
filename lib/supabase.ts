@@ -1,6 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
-import { createClientComponentClient, createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createBrowserClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 // Environment variables validation
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -226,23 +225,17 @@ export interface Database {
 }
 
 // Client-side Supabase client (for browser/client components)
-export const createClient = () => {
-  return createClientComponentClient<Database>()
-}
-
-// Server-side Supabase client (for server components)
-export const createServerClient = () => {
-  const cookieStore = cookies()
-  return createServerComponentClient<Database>({ cookies: () => cookieStore })
+export function createClient() {
+  return createBrowserClient<Database>(supabaseUrl!, supabaseAnonKey!)
 }
 
 // Admin client with service role key (for server-side admin operations)
-export const createAdminClient = () => {
+export function createAdminClient() {
   if (!supabaseServiceRoleKey) {
     throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable')
   }
   
-  return createClient<Database>(supabaseUrl, supabaseServiceRoleKey, {
+  return createSupabaseClient(supabaseUrl!, supabaseServiceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
@@ -250,7 +243,5 @@ export const createAdminClient = () => {
   })
 }
 
-// Standard client for general use
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
-
-export type { Database }
+// Standard client for general use (client-side)
+export const supabase = createBrowserClient<Database>(supabaseUrl!, supabaseAnonKey!)
