@@ -1,178 +1,62 @@
 "use client"
 
-import { Search, Star, ChevronLeft, ChevronRight } from "lucide-react"
+import { Search, Star, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { useState } from "react"
 import Link from "next/link"
-
-const tours = [
-  {
-    id: 1,
-    title: "Machu Picchu",
-    location: "CUSCO",
-    city: "Cusco",
-    description: "Descubre la ciudadela inca más famosa del mundo, Patrimonio de la Humanidad",
-    image: "/machu-picchu-ruins.png",
-    rating: 4.9,
-    reviews: 125000,
-    price: 85.0,
-    originalPrice: null,
-    discount: null,
-  },
-  {
-    id: 2,
-    title: "Valle Sagrado de los Incas",
-    location: "CUSCO",
-    city: "Cusco",
-    description: "Explora los pueblos andinos y sitios arqueológicos del Valle Sagrado",
-    image: "/sacred-valley-peru-andes-mountains-terraces.png",
-    rating: 4.7,
-    reviews: 45230,
-    price: 65.0,
-    originalPrice: null,
-    discount: "HASTA -15%",
-  },
-  {
-    id: 3,
-    title: "Sacsayhuamán",
-    location: "CUSCO",
-    city: "Cusco",
-    description: "Fortaleza inca con impresionantes muros de piedra y vistas panorámicas de Cusco",
-    image: "/sacsayhuaman-fortress-cusco-stone-walls.png",
-    rating: 4.6,
-    reviews: 28900,
-    price: 25.0,
-    originalPrice: null,
-    discount: null,
-  },
-  {
-    id: 4,
-    title: "Líneas de Nazca",
-    location: "ICA",
-    city: "Ica",
-    description: "Sobrevuela los misteriosos geoglifos de Nazca desde una avioneta",
-    image: "/nazca-lines-peru-desert-geoglyphs-aerial-view.png",
-    rating: 4.5,
-    reviews: 15670,
-    price: 120.0,
-    originalPrice: null,
-    discount: null,
-  },
-  {
-    id: 5,
-    title: "Oasis de Huacachina",
-    location: "ICA",
-    city: "Ica",
-    description: "Aventura en el desierto con sandboarding y paseos en buggy",
-    image: "/huacachina-oasis-desert-sand-dunes-peru.png",
-    rating: 4.4,
-    reviews: 12450,
-    price: 45.0,
-    originalPrice: null,
-    discount: "HASTA -20%",
-  },
-  {
-    id: 6,
-    title: "Islas Ballestas",
-    location: "ICA",
-    city: "Ica",
-    description: "Observa lobos marinos, pingüinos y aves en las Galápagos peruanas",
-    image: "/ballestas-islands-sea-lions-penguins-peru.png",
-    rating: 4.3,
-    reviews: 18750,
-    price: 35.0,
-    originalPrice: null,
-    discount: null,
-  },
-  {
-    id: 7,
-    title: "Centro Histórico de Lima",
-    location: "LIMA",
-    city: "Lima",
-    description: "Recorre la Lima colonial con sus iglesias y palacios virreinales",
-    image: "/lima-historic-center-colonial-architecture-cathedr.png",
-    rating: 4.2,
-    reviews: 34560,
-    price: 20.0,
-    originalPrice: null,
-    discount: null,
-  },
-  {
-    id: 8,
-    title: "Barranco y Miraflores",
-    location: "LIMA",
-    city: "Lima",
-    description: "Explora los distritos bohemios con vistas al Pacífico y gastronomía",
-    image: "/barranco-miraflores-lima-pacific-ocean-cliffs.png",
-    rating: 4.4,
-    reviews: 22100,
-    price: 30.0,
-    originalPrice: null,
-    discount: "HASTA -10%",
-  },
-  {
-    id: 9,
-    title: "Cañón del Colca",
-    location: "AREQUIPA",
-    city: "Arequipa",
-    description: "Observa cóndores andinos en uno de los cañones más profundos del mundo",
-    image: "/colca-canyon-condors-arequipa-peru-andes.png",
-    rating: 4.6,
-    reviews: 19800,
-    price: 75.0,
-    originalPrice: null,
-    discount: null,
-  },
-  {
-    id: 10,
-    title: "Monasterio de Santa Catalina",
-    location: "AREQUIPA",
-    city: "Arequipa",
-    description: "Ciudad dentro de la ciudad, monasterio colonial del siglo XVI",
-    image: "/santa-catalina-monastery-arequipa-colonial-archite.png",
-    rating: 4.5,
-    reviews: 16750,
-    price: 15.0,
-    originalPrice: null,
-    discount: null,
-  },
-  {
-    id: 11,
-    title: "Lago Titicaca",
-    location: "PUNO",
-    city: "Puno",
-    description: "Navega por el lago navegable más alto del mundo y visita islas flotantes",
-    image: "/lake-titicaca-floating-islands-uros-peru-bolivia.png",
-    rating: 4.7,
-    reviews: 28900,
-    price: 55.0,
-    originalPrice: null,
-    discount: null,
-  },
-  {
-    id: 12,
-    title: "Islas Uros",
-    location: "PUNO",
-    city: "Puno",
-    description: "Conoce las islas artificiales de totora y la cultura ancestral uro",
-    image: "/uros-islands-reed-boats-titicaca-traditional-cultu.png",
-    rating: 4.3,
-    reviews: 21450,
-    price: 40.0,
-    originalPrice: null,
-    discount: "HASTA -15%",
-  },
-]
-
-const cities = ["Cusco", "Lima", "Arequipa", "Ica", "Puno"]
+import { useQuery } from "@tanstack/react-query"
+import { TourService, Tour } from "@/services/tour-service"
+import { toast } from "react-hot-toast"
 
 export default function HomePage() {
-  const [selectedCity, setSelectedCity] = useState("Cusco")
+  const [selectedCity, setSelectedCity] = useState<string>("")
+  const [searchTerm, setSearchTerm] = useState<string>("") 
+  const [searchInput, setSearchInput] = useState<string>("")  // For controlled input
 
-  const filteredTours = tours.filter((tour) => tour.city === selectedCity)
+  // Fetch cities
+  const { data: cities = [] } = useQuery({
+    queryKey: ['cities'],
+    queryFn: TourService.getCities,
+    staleTime: 30 * 60 * 1000, // 30 minutes
+  })
+
+  // Fetch tours based on filters
+  const { data: toursData, isLoading, error } = useQuery({
+    queryKey: ['tours', selectedCity, searchTerm],
+    queryFn: () => TourService.getTours({
+      city: selectedCity || undefined,
+      search: searchTerm || undefined,
+      is_active: true,
+    }),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  })
+
+  // Fetch featured tours
+  const { data: featuredTours = [] } = useQuery({
+    queryKey: ['featured-tours'],
+    queryFn: () => TourService.getFeaturedTours(6),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  })
+
+  const tours = toursData?.items || []
+  const totalTours = toursData?.total || 0
+
+  const handleSearch = () => {
+    setSearchTerm(searchInput.trim())
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch()
+    }
+  }
+
+  if (error) {
+    toast.error('Error al cargar los tours')
+  }
 
   return (
     <div className="min-h-screen">
@@ -203,9 +87,17 @@ export default function HomePage() {
               <Input
                 type="text"
                 placeholder="Buscar destinos y experiencias"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyPress={handleKeyPress}
                 className="flex-1 border-0 bg-transparent px-4 py-4 text-foreground placeholder:text-muted-foreground focus-visible:ring-0"
               />
-              <Button className="m-2 rounded-full bg-primary hover:bg-primary/90">Buscar</Button>
+              <Button 
+                onClick={handleSearch}
+                className="m-2 rounded-full bg-primary hover:bg-primary/90"
+              >
+                Buscar
+              </Button>
             </div>
           </div>
 
@@ -263,6 +155,18 @@ export default function HomePage() {
 
           {/* City Filter Tabs */}
           <div className="flex flex-wrap justify-center gap-4 mb-12">
+            <Button
+              variant={selectedCity === "" ? "default" : "outline"}
+              className={`rounded-full px-6 py-2 ${
+                selectedCity === "" ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border-border"
+              }`}
+              onClick={() => setSelectedCity("")}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-muted-foreground/20" />
+                Todos
+              </div>
+            </Button>
             {cities.map((city) => (
               <Button
                 key={city}
@@ -282,53 +186,84 @@ export default function HomePage() {
 
           {/* Tours Grid */}
           <div className="relative">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredTours.map((tour) => (
-                <Link key={tour.id} href={`/tour/${tour.id}`}>
-                  <Card className="group cursor-pointer hover:shadow-lg transition-shadow duration-200">
-                    <div className="relative overflow-hidden rounded-t-lg">
-                      <img
-                        src={tour.image || "/placeholder.svg"}
-                        alt={tour.title}
-                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
-                      />
-                      {tour.discount && (
-                        <Badge className="absolute top-3 left-3 bg-red-500 hover:bg-red-500 text-white">
-                          {tour.discount}
-                        </Badge>
-                      )}
-                    </div>
-
-                    <CardContent className="p-4">
-                      <div className="mb-2">
-                        <Badge variant="secondary" className="text-xs font-medium mb-2">
-                          {tour.location}
-                        </Badge>
-                      </div>
-
-                      <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
-                        {tour.title}
-                      </h3>
-
-                      <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{tour.description}</p>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span className="font-medium text-sm">{tour.rating}</span>
-                          <span className="text-muted-foreground text-sm">({tour.reviews.toLocaleString()})</span>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin" />
+                <span className="ml-2">Cargando tours...</span>
+              </div>
+            ) : tours.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">
+                  {searchTerm || selectedCity 
+                    ? 'No se encontraron tours para los filtros seleccionados.'
+                    : 'No hay tours disponibles en este momento.'}
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {tours.map((tour) => (
+                    <Link key={tour.id} href={`/tour/${tour.id}`}>
+                      <Card className="group cursor-pointer hover:shadow-lg transition-shadow duration-200">
+                        <div className="relative overflow-hidden rounded-t-lg">
+                          <img
+                            src={tour.images?.[0] || "/placeholder.svg"}
+                            alt={tour.title}
+                            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
+                          />
+                          {tour.discount_percentage && (
+                            <Badge className="absolute top-3 left-3 bg-red-500 hover:bg-red-500 text-white">
+                              -{tour.discount_percentage}%
+                            </Badge>
+                          )}
                         </div>
 
-                        <div className="text-right">
-                          <div className="text-sm text-muted-foreground">Desde</div>
-                          <div className="font-bold text-lg">{tour.price.toFixed(2)} €</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
+                        <CardContent className="p-4">
+                          <div className="mb-2">
+                            <Badge variant="secondary" className="text-xs font-medium mb-2">
+                              {tour.city?.toUpperCase()}
+                            </Badge>
+                          </div>
+
+                          <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
+                            {tour.title}
+                          </h3>
+
+                          <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{tour.description}</p>
+
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1">
+                              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                              <span className="font-medium text-sm">{tour.rating}</span>
+                              <span className="text-muted-foreground text-sm">({tour.review_count?.toLocaleString()})</span>
+                            </div>
+
+                            <div className="text-right">
+                              <div className="text-sm text-muted-foreground">Desde</div>
+                              <div className="flex items-center gap-2">
+                                {tour.original_price && tour.original_price > tour.price && (
+                                  <span className="text-xs text-muted-foreground line-through">
+                                    ${tour.original_price.toFixed(2)}
+                                  </span>
+                                )}
+                                <span className="font-bold text-lg">${tour.price.toFixed(2)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+
+                {/* Show total count */}
+                {totalTours > 0 && (
+                  <div className="text-center mt-8 text-sm text-muted-foreground">
+                    Mostrando {tours.length} de {totalTours} tours
+                  </div>
+                )}
+              </>
+            )}
 
             {/* Navigation Arrows */}
             <Button
@@ -350,96 +285,77 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Second Tours Section */}
+      {/* Featured Tours Section */}
       <section className="py-16 px-4 bg-muted/30">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold mb-8 text-center">Más destinos increíbles en Perú</h2>
+          <h2 className="text-3xl font-bold mb-8 text-center">Tours Destacados</h2>
+          <p className="text-center text-muted-foreground mb-12">Los tours más populares y mejor valorados</p>
 
-          {/* City Filter Tabs - Second Instance */}
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
-            {cities.map((city) => (
-              <Button
-                key={`second-${city}`}
-                variant={selectedCity === city ? "default" : "outline"}
-                className={`rounded-full px-6 py-2 ${
-                  selectedCity === city ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border-border"
-                }`}
-                onClick={() => setSelectedCity(city)}
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-muted-foreground/20" />
-                  {city}
-                </div>
-              </Button>
-            ))}
-          </div>
-
-          {/* Second Tours Grid */}
+          {/* Featured Tours Grid */}
           <div className="relative">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredTours.map((tour) => (
-                <Link key={`second-${tour.id}`} href={`/tour/${tour.id}`}>
-                  <Card className="group cursor-pointer hover:shadow-lg transition-shadow duration-200">
-                    <div className="relative overflow-hidden rounded-t-lg">
-                      <img
-                        src={tour.image || "/placeholder.svg"}
-                        alt={tour.title}
-                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
-                      />
-                      {tour.discount && (
-                        <Badge className="absolute top-3 left-3 bg-red-500 hover:bg-red-500 text-white">
-                          {tour.discount}
+            {featuredTours.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No hay tours destacados disponibles en este momento.</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {featuredTours.map((tour) => (
+                  <Link key={`featured-${tour.id}`} href={`/tour/${tour.id}`}>
+                    <Card className="group cursor-pointer hover:shadow-lg transition-shadow duration-200">
+                      <div className="relative overflow-hidden rounded-t-lg">
+                        <img
+                          src={tour.images?.[0] || "/placeholder.svg"}
+                          alt={tour.title}
+                          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
+                        />
+                        <Badge className="absolute top-3 left-3 bg-blue-500 hover:bg-blue-500 text-white">
+                          ⭐ Destacado
                         </Badge>
-                      )}
-                    </div>
-
-                    <CardContent className="p-4">
-                      <div className="mb-2">
-                        <Badge variant="secondary" className="text-xs font-medium mb-2">
-                          {tour.location}
-                        </Badge>
+                        {tour.discount_percentage && (
+                          <Badge className="absolute top-3 right-3 bg-red-500 hover:bg-red-500 text-white">
+                            -{tour.discount_percentage}%
+                          </Badge>
+                        )}
                       </div>
 
-                      <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
-                        {tour.title}
-                      </h3>
-
-                      <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{tour.description}</p>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span className="font-medium text-sm">{tour.rating}</span>
-                          <span className="text-muted-foreground text-sm">({tour.reviews.toLocaleString()})</span>
+                      <CardContent className="p-4">
+                        <div className="mb-2">
+                          <Badge variant="secondary" className="text-xs font-medium mb-2">
+                            {tour.city?.toUpperCase()}
+                          </Badge>
                         </div>
 
-                        <div className="text-right">
-                          <div className="text-sm text-muted-foreground">Desde</div>
-                          <div className="font-bold text-lg">{tour.price.toFixed(2)} €</div>
+                        <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
+                          {tour.title}
+                        </h3>
+
+                        <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{tour.description}</p>
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1">
+                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                            <span className="font-medium text-sm">{tour.rating}</span>
+                            <span className="text-muted-foreground text-sm">({tour.review_count?.toLocaleString()})</span>
+                          </div>
+
+                          <div className="text-right">
+                            <div className="text-sm text-muted-foreground">Desde</div>
+                            <div className="flex items-center gap-2">
+                              {tour.original_price && tour.original_price > tour.price && (
+                                <span className="text-xs text-muted-foreground line-through">
+                                  ${tour.original_price.toFixed(2)}
+                                </span>
+                              )}
+                              <span className="font-bold text-lg">${tour.price.toFixed(2)}</span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-
-            {/* Navigation Arrows */}
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 rounded-full bg-background shadow-lg hover:bg-muted"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 rounded-full bg-background shadow-lg hover:bg-muted"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
+                      </CardContent>
+                    </Card>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </section>
