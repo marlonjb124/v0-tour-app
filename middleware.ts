@@ -54,33 +54,45 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Refresh session if expired
-  const { data: { session } } = await supabase.auth.getSession()
+  // Use getUser() for secure authentication - validates with Supabase Auth server
+  const { data: { user }, error } = await supabase.auth.getUser()
 
   // Protect admin routes
   if (request.nextUrl.pathname.startsWith('/admin')) {
-    if (!session) {
+    // Check if user is authenticated
+    if (!user || error) {
       return NextResponse.redirect(new URL('/auth/login', request.url))
     }
 
+    // Skip middleware for admin-setup page
+    if (request.nextUrl.pathname === '/admin-setup') {
+      return response
+    }
+
     // Check if user is admin
-    const { data: userProfile } = await supabase
+    const { data: userProfile, error: profileError } = await supabase
       .from('users')
       .select('role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single()
 
-    if (!userProfile || userProfile.role !== 'admin') {
+    // If profile doesn't exist, redirect to admin setup
+    if (profileError?.code === 'PGRST116' || !userProfile) {
+      return NextResponse.redirect(new URL('/admin-setup', request.url))
+    }
+
+    // If user is not admin, redirect to home
+    if (userProfile.role !== 'admin') {
       return NextResponse.redirect(new URL('/', request.url))
     }
   }
 
   // Protect auth routes (redirect to dashboard if already logged in)
-  if (request.nextUrl.pathname.startsWith('/auth/') && session) {
+  if (request.nextUrl.pathname.startsWith('/auth/') && user && !error) {
     const { data: userProfile } = await supabase
       .from('users')
       .select('role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single()
 
     if (userProfile?.role === 'admin') {

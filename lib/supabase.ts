@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createClient as createSupabaseClient, type SupabaseClient } from '@supabase/supabase-js'
 
 // Environment variables validation
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -10,223 +10,18 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-// Database types definition
-export interface Database {
-  public: {
-    Tables: {
-      users: {
-        Row: {
-          id: string
-          email: string
-          full_name: string
-          phone: string | null
-          date_of_birth: string | null
-          country: string | null
-          role: 'admin' | 'user'
-          is_active: boolean
-          is_verified: boolean
-          email_notifications: boolean
-          sms_notifications: boolean
-          created_at: string
-          last_login: string | null
-          updated_at: string
-        }
-        Insert: {
-          id: string
-          email: string
-          full_name: string
-          phone?: string | null
-          date_of_birth?: string | null
-          country?: string | null
-          role?: 'admin' | 'user'
-          is_active?: boolean
-          is_verified?: boolean
-          email_notifications?: boolean
-          sms_notifications?: boolean
-          created_at?: string
-          last_login?: string | null
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          email?: string
-          full_name?: string
-          phone?: string | null
-          date_of_birth?: string | null
-          country?: string | null
-          role?: 'admin' | 'user'
-          is_active?: boolean
-          is_verified?: boolean
-          email_notifications?: boolean
-          sms_notifications?: boolean
-          created_at?: string
-          last_login?: string | null
-          updated_at?: string
-        }
-      }
-      tours: {
-        Row: {
-          id: string
-          title: string
-          description: string
-          full_description: string | null
-          city: string
-          location: string
-          meeting_point: string
-          price: number
-          original_price: number | null
-          duration: string
-          max_group_size: number
-          highlights: any[]
-          included: any[]
-          cancellation_policy: string
-          rating: number
-          review_count: number
-          images: any[]
-          is_featured: boolean
-          is_active: boolean
-          created_by: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          title: string
-          description: string
-          full_description?: string | null
-          city: string
-          location: string
-          meeting_point: string
-          price: number
-          original_price?: number | null
-          duration: string
-          max_group_size: number
-          highlights?: any[]
-          included?: any[]
-          cancellation_policy: string
-          rating?: number
-          review_count?: number
-          images?: any[]
-          is_featured?: boolean
-          is_active?: boolean
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          title?: string
-          description?: string
-          full_description?: string | null
-          city?: string
-          location?: string
-          meeting_point?: string
-          price?: number
-          original_price?: number | null
-          duration?: string
-          max_group_size?: number
-          highlights?: any[]
-          included?: any[]
-          cancellation_policy?: string
-          rating?: number
-          review_count?: number
-          images?: any[]
-          is_featured?: boolean
-          is_active?: boolean
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      tour_availability: {
-        Row: {
-          id: string
-          tour_id: string
-          available_date: string
-          time_slots: any[]
-          available_spots: number
-          is_available: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          tour_id: string
-          available_date: string
-          time_slots: any[]
-          available_spots: number
-          is_available?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          tour_id?: string
-          available_date?: string
-          time_slots?: any[]
-          available_spots?: number
-          is_available?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      bookings: {
-        Row: {
-          id: string
-          tour_id: string
-          user_id: string
-          availability_id: string
-          booking_date: string
-          booking_time: string
-          guest_count: number
-          total_amount: number
-          status: 'pending' | 'confirmed' | 'cancelled' | 'completed'
-          payment_status: 'pending' | 'paid' | 'refunded' | 'failed'
-          payment_id: string | null
-          special_requests: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          tour_id: string
-          user_id: string
-          availability_id: string
-          booking_date: string
-          booking_time: string
-          guest_count: number
-          total_amount: number
-          status?: 'pending' | 'confirmed' | 'cancelled' | 'completed'
-          payment_status?: 'pending' | 'paid' | 'refunded' | 'failed'
-          payment_id?: string | null
-          special_requests?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          tour_id?: string
-          user_id?: string
-          availability_id?: string
-          booking_date?: string
-          booking_time?: string
-          guest_count?: number
-          total_amount?: number
-          status?: 'pending' | 'confirmed' | 'cancelled' | 'completed'
-          payment_status?: 'pending' | 'paid' | 'refunded' | 'failed'
-          payment_id?: string | null
-          special_requests?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-    }
-  }
-}
+import type { Database } from './database.types'
+
+let client: SupabaseClient<Database> | undefined
 
 // Client-side Supabase client (for browser/client components)
 export function createClient() {
-  return createBrowserClient<Database>(supabaseUrl!, supabaseAnonKey!)
+  if (client) {
+    return client
+  }
+
+  client = createBrowserClient<Database>(supabaseUrl!, supabaseAnonKey!)
+  return client
 }
 
 // Admin client with service role key (for server-side admin operations)
@@ -235,13 +30,10 @@ export function createAdminClient() {
     throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable')
   }
   
-  return createSupabaseClient(supabaseUrl!, supabaseServiceRoleKey, {
+  return createSupabaseClient<Database>(supabaseUrl!, supabaseServiceRoleKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
     }
   })
 }
-
-// Standard client for general use (client-side)
-export const supabase = createBrowserClient<Database>(supabaseUrl!, supabaseAnonKey!)

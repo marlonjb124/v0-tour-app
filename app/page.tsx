@@ -203,7 +203,7 @@ export default function HomePage() {
               <>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {tours.map((tour) => (
-                    <Link key={tour.id} href={`/tour/${tour.id}`}>
+                    <Link key={tour.id} href={`/tours/${tour.id}`}>
                       <Card className="group cursor-pointer hover:shadow-lg transition-shadow duration-200">
                         <div className="relative overflow-hidden rounded-t-lg">
                           <img
@@ -300,7 +300,7 @@ export default function HomePage() {
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {featuredTours.map((tour) => (
-                  <Link key={`featured-${tour.id}`} href={`/tour/${tour.id}`}>
+                  <Link key={`featured-${tour.id}`} href={`/tours/${tour.id}`}>
                     <Card className="group cursor-pointer hover:shadow-lg transition-shadow duration-200">
                       <div className="relative overflow-hidden rounded-t-lg">
                         <img

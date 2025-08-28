@@ -24,28 +24,25 @@ export default function Navigation() {
               height={32}
               className="w-8 h-8"
             />
-            <Image
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/PERU%20TRAVEL%20LOGO%20BLANCO-6lUpdMD44IIc4UvFbZy0ntsBDgi1Nl.png"
-              alt="Peru Travel"
-              width={120}
-              height={24}
-              className="hidden sm:block h-6 w-auto"
-            />
+
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <Link href="/" className="text-sm font-medium hover:text-primary transition-colors">
-              Inicio
-            </Link>
-            <Link href="/#tours" className="text-sm font-medium hover:text-primary transition-colors">
-              Tours
-            </Link>
             <Link href="/#about" className="text-sm font-medium hover:text-primary transition-colors">
-              Sobre nosotros
+              Sobre Nosotros
             </Link>
-            <Link href="/#contact" className="text-sm font-medium hover:text-primary transition-colors">
-              Contacto
+            <Link href="/#peru-in" className="text-sm font-medium hover:text-primary transition-colors">
+              Perú IN
+            </Link>
+            <Link href="/#peru-out" className="text-sm font-medium hover:text-primary transition-colors">
+              Perú OUT
+            </Link>
+            <Link href="/#tickets" className="text-sm font-medium hover:text-primary transition-colors">
+              Tickets
+            </Link>
+            <Link href="/#mapa-interactivo" className="text-muted-foreground transition-colors hover:text-foreground">
+              Mapa del Perú interactivo
             </Link>
           </div>
 
@@ -69,32 +66,39 @@ export default function Navigation() {
           <div className="md:hidden border-t py-4">
             <div className="flex flex-col gap-4">
               <Link
-                href="/"
-                className="text-sm font-medium hover:text-primary transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Inicio
-              </Link>
-              <Link
-                href="/#tours"
-                className="text-sm font-medium hover:text-primary transition-colors"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Tours
-              </Link>
-              <Link
                 href="/#about"
                 className="text-sm font-medium hover:text-primary transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Sobre nosotros
+                Sobre Nosotros
               </Link>
               <Link
-                href="/#contact"
+                href="/#peru-in"
                 className="text-sm font-medium hover:text-primary transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
-                Contacto
+                Perú IN
+              </Link>
+              <Link
+                href="/#peru-out"
+                className="text-sm font-medium hover:text-primary transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Perú OUT
+              </Link>
+              <Link
+                href="/#tickets"
+                className="text-sm font-medium hover:text-primary transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Tickets
+              </Link>
+              <Link
+                href="/#mapa-interactivo"
+                className="text-sm font-medium hover:text-primary transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Mapa del Perú interactivo
               </Link>
 
               {/* Mobile Search */}

@@ -1,8 +1,6 @@
-import { createClient, createServerClient } from '@/lib/supabase'
-import type { Database } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
-
-export type User = Database['public']['Tables']['users']['Row']
+import type { User } from '@/lib/types' // Use the centralized User type
 
 export interface LoginRequest {
   email: string
@@ -56,6 +54,7 @@ export class AuthService {
       .from('users')
       .select('*')
       .eq('id', data.user.id)
+      .limit(1)
       .single()
 
     if (profileError) {

@@ -26,21 +26,11 @@ CREATE POLICY "Users can update own profile" ON public.users
 
 -- Admins can read all users
 CREATE POLICY "Admins can read all users" ON public.users
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  FOR SELECT USING (is_admin());
 
 -- Admins can update all users
 CREATE POLICY "Admins can update all users" ON public.users
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM public.users 
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  FOR UPDATE USING (is_admin());
 
 -- Allow users to be created (for registration)
 CREATE POLICY "Allow user creation" ON public.users
