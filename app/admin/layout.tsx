@@ -11,29 +11,29 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className=\"min-h-screen flex items-center justify-center\">
-        <div className=\"text-center\">
-          <Loader2 className=\"h-8 w-8 animate-spin mx-auto mb-4\" />
-          <p className=\"text-muted-foreground\">Cargando panel de administración...</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Cargando panel de administración...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className=\"min-h-screen bg-muted/30\">
-      <div className=\"flex\">
+    <div className="min-h-screen bg-muted/30">
+      <div className="flex">
         {/* Sidebar */}
         <AdminSidebar />
         
         {/* Main Content */}
-        <div className=\"flex-1 flex flex-col\">
+        <div className="flex-1 flex flex-col">
           {/* Header */}
           <AdminHeader />
           
           {/* Page Content */}
-          <main className=\"flex-1 p-6\">
-            <div className=\"max-w-7xl mx-auto\">
+          <main className="flex-1 p-6">
+            <div className="max-w-7xl mx-auto">
               {children}
             </div>
           </main>
@@ -43,4 +43,4 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
   )
 }
 
-export default withAdminAuth(AdminLayout)"
+export default withAdminAuth(AdminLayout)

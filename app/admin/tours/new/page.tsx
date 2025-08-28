@@ -2,18 +2,18 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation } from '@tanstack/react-query'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { TourService, CreateTourRequest } from '@/services/tour-service'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
 import { ImageUpload } from '@/components/ui/image-upload'
+import { Textarea } from '@/components/ui/textarea'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   Form,
   FormControl,
@@ -59,8 +59,8 @@ const tourSchema = z.object({
   original_price: z.number().optional(),
   duration: z.string().min(1, 'La duración es requerida').max(50, 'La duración no puede exceder 50 caracteres'),
   max_group_size: z.number().min(1, 'El tamaño del grupo debe ser al menos 1').max(1000, 'El tamaño del grupo no puede exceder 1000'),
-  highlights: z.array(z.string()).optional(),
-  included: z.array(z.string()).optional(),
+  highlights: z.array(z.string()),
+  included: z.array(z.string()),
   cancellation_policy: z.string().min(10, 'La política de cancelación debe tener al menos 10 caracteres'),
   images: z.array(z.string()).optional(),
   is_featured: z.boolean().optional(),
@@ -88,8 +88,8 @@ export default function NewTourPage() {
       original_price: undefined,
       duration: '',
       max_group_size: 10,
-      highlights: [],
-      included: [],
+      highlights: [""],
+      included: [""],
       cancellation_policy: 'Cancelación gratuita hasta 24 horas antes del tour',
       images: [],
       is_featured: false,
@@ -97,13 +97,14 @@ export default function NewTourPage() {
     }
   })
 
+  // Field arrays for dynamic form fields  
   const highlightsFieldArray = useFieldArray({
-    control: form.control,
+    control: form.control as any,
     name: 'highlights'
   })
 
   const includedFieldArray = useFieldArray({
-    control: form.control,
+    control: form.control as any,
     name: 'included'
   })
 
