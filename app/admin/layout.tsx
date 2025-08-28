@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { useAuth, withAdminAuth } from '@/contexts/auth-context'
 import { AdminSidebar } from '@/components/admin/admin-sidebar'
 import { AdminHeader } from '@/components/admin/admin-header'
