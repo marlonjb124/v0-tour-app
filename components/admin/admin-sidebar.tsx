@@ -75,30 +75,30 @@ export function AdminSidebar() {
   }
 
   return (
-    <div className=\"w-64 bg-card border-r border-border h-screen sticky top-0 flex flex-col\">
+    <div className="w-64 bg-card border-r border-border h-screen sticky top-0 flex flex-col\">
       {/* Logo and Title */}
-      <div className=\"p-6 border-b border-border\">
-        <div className=\"flex items-center gap-3\">
-          <div className=\"w-8 h-8 bg-primary rounded-lg flex items-center justify-center\">
-            <Globe className=\"w-5 h-5 text-primary-foreground\" />
+      <div className="p-6 border-b border-border\">
+        <div className="flex items-center gap-3\">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center\">
+            <Globe className="w-5 h-5 text-primary-foreground\" />
           </div>
           <div>
-            <h1 className=\"font-bold text-lg\">Tours Admin</h1>
-            <p className=\"text-xs text-muted-foreground\">Panel de Control</p>
+            <h1 className="font-bold text-lg\">Tours Admin</h1>
+            <p className="text-xs text-muted-foreground\">Panel de Control</p>
           </div>
         </div>
       </div>
 
       {/* User Info */}
-      <div className=\"p-4 border-b border-border\">
-        <div className=\"flex items-center gap-3\">
-          <div className=\"w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center\">
-            <Shield className=\"w-5 h-5 text-primary\" />
+      <div className="p-4 border-b border-border\">
+        <div className="flex items-center gap-3\">
+          <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center\">
+            <Shield className="w-5 h-5 text-primary\" />
           </div>
-          <div className=\"flex-1 min-w-0\">
-            <p className=\"font-medium text-sm truncate\">{user?.full_name}</p>
-            <div className=\"flex items-center gap-2\">
-              <Badge variant=\"secondary\" className=\"text-xs\">
+          <div className="flex-1 min-w-0\">
+            <p className="font-medium text-sm truncate\">{user?.full_name}</p>
+            <div className="flex items-center gap-2\">
+              <Badge variant="secondary" className="text-xs">
                 Administrador
               </Badge>
             </div>
@@ -107,8 +107,8 @@ export function AdminSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className=\"flex-1 p-4 space-y-2\">
-        <div className=\"text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3\">
+      <nav className="flex-1 p-4 space-y-2\">
+        <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3\">
           Navegación
         </div>
         
@@ -126,8 +126,8 @@ export function AdminSidebar() {
                   'w-4 h-4 flex-shrink-0',
                   isActive ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-foreground'
                 )} />
-                <div className=\"flex-1 min-w-0\">
-                  <div className=\"font-medium truncate\">{item.title}</div>
+                <div className="flex-1 min-w-0\">
+                  <div className="font-medium truncate\">{item.title}</div>
                   {item.description && (
                     <div className={cn(
                       'text-xs truncate',
@@ -140,7 +140,7 @@ export function AdminSidebar() {
                 {item.badge && (
                   <Badge 
                     variant={isActive ? 'secondary' : 'default'}
-                    className=\"text-xs\"
+                    className="text-xs\"
                   >
                     {item.badge}
                   </Badge>
@@ -152,32 +152,32 @@ export function AdminSidebar() {
       </nav>
 
       {/* Footer Actions */}
-      <div className=\"p-4 border-t border-border\">
-        <div className=\"space-y-2\">
-          <Link href=\"/\" className=\"w-full\">
-            <Button variant=\"outline\" size=\"sm\" className=\"w-full justify-start\">
-              <Globe className=\"w-4 h-4 mr-2\" />
+      <div className="p-4 border-t border-border\">
+        <div className="space-y-2\">
+          <Link href="/\" className="w-full\">
+            <Button variant="outline" size="sm" className="w-full justify-start">
+              <Globe className="w-4 h-4 mr-2\" />
               Ver Sitio Web
             </Button>
           </Link>
           
           <Button 
-            variant=\"ghost\" 
-            size=\"sm\" 
-            className=\"w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50\"
+            variant="ghost" 
+            size="sm" 
+            className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
             onClick={handleLogout}
           >
-            <LogOut className=\"w-4 h-4 mr-2\" />
+            <LogOut className="w-4 h-4 mr-2\" />
             Cerrar Sesión
           </Button>
         </div>
         
-        <div className=\"mt-4 text-center\">
-          <p className=\"text-xs text-muted-foreground\">
+        <div className="mt-4 text-center\">
+          <p className="text-xs text-muted-foreground\">
             v1.0.0
           </p>
         </div>
       </div>
     </div>
   )
-}"
+}

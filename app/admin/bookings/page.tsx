@@ -101,8 +101,8 @@ export default function BookingsManagement() {
     queryFn: () => AdminService.getBookings(
       {
         search: filters.search || undefined,
-        status: filters.status || undefined,
-        payment_status: filters.payment_status || undefined,
+        status: (filters.status as "pending" | "confirmed" | "cancelled" | "completed") || undefined,
+        payment_status: (filters.payment_status as "pending" | "paid" | "refunded" | "failed") || undefined,
         date_from: filters.date_from || undefined,
         date_to: filters.date_to || undefined,
       },
@@ -429,11 +429,11 @@ export default function BookingsManagement() {
                       <div className="text-sm">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          {new Date(booking.date).toLocaleDateString('es-ES')}
+                          {new Date(booking.booking_date || booking.created_at).toLocaleDateString('es-ES')}
                         </div>
                         <div className="flex items-center gap-1 text-muted-foreground">
                           <Clock className="h-3 w-3" />
-                          {booking.time}
+                          {booking.total_amount ? `$${booking.total_amount}` : 'No especificado'}
                         </div>
                       </div>
                     </TableCell>
@@ -613,11 +613,11 @@ export default function BookingsManagement() {
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span>{new Date(selectedBooking.date).toLocaleDateString('es-ES')}</span>
+                          <span>{new Date(selectedBooking.booking_date || selectedBooking.created_at).toLocaleDateString('es-ES')}</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Clock className="h-4 w-4 text-muted-foreground" />
-                          <span>{selectedBooking.time}</span>
+                          <span>{selectedBooking.total_amount ? `$${selectedBooking.total_amount}` : 'No especificado'}</span>
                         </div>
                       </div>
                     </div>

@@ -6,6 +6,33 @@ import { AuthService, User, LoginRequest, RegisterRequest } from '@/services/aut
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js'
 import { toast } from 'sonner'
 
+interface NavigationItem {
+  title: string
+  href: string
+  icon: any
+  badge?: string
+  description?: string
+}
+
+interface AdminHeaderProps {
+  className?: string
+  onSearchSubmit?: (query: string) => void
+}
+
+interface NotificationItem {
+  id: string
+  type: 'booking' | 'payment' | 'user'
+  title: string
+  description: string
+  timestamp: Date
+  read: boolean
+}
+
+interface UserMenuProps {
+  user: User
+  onLogout: () => Promise<void>
+}
+
 interface AuthContextType {
   user: User | null
   supabaseUser: SupabaseUser | null
@@ -177,8 +204,8 @@ export const useAuth = () => {
   return context
 }
 
-// HOC for protecting routes
-export const withAuth = <P extends object>(
+// Enhanced HOC for protecting routes with better type safety
+export const withAuth = <P extends Record<string, any>>(
   Component: React.ComponentType<P>
 ) => {
   return function AuthenticatedComponent(props: P) {
@@ -203,8 +230,8 @@ export const withAuth = <P extends object>(
   }
 }
 
-// HOC for protecting admin routes
-export const withAdminAuth = <P extends object>(
+// Enhanced HOC for protecting admin routes with better type safety
+export const withAdminAuth = <P extends Record<string, any>>(
   Component: React.ComponentType<P>
 ) => {
   return function AdminAuthenticatedComponent(props: P) {

@@ -159,7 +159,7 @@ export default function ToursManagement() {
   })
 
   const tours = toursData?.items || []
-  const totalPages = toursData?.pages || 1
+  const totalPages = Math.ceil((toursData?.total || 0) / 10)
 
   const handleFilterChange = (key: keyof ToursFilters, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }))
@@ -454,7 +454,7 @@ export default function ToursManagement() {
                         <Badge variant="secondary">{tour.city}</Badge>
                       </TableCell>
                       <TableCell>
-                        {formatPrice(tour.price, tour.original_price)}
+                        {formatPrice(tour.price, tour.original_price || undefined)}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1">
