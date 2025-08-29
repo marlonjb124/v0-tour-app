@@ -46,8 +46,9 @@ async function getTourDetails(id: string): Promise<TourWithAvailability | null> 
   };
 }
 
-export default async function TourDetailPage({ params }: { params: { id: string } }) {
-  const tour = await getTourDetails(params.id);
+export default async function TourDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params;
+  const tour = await getTourDetails(resolvedParams.id);
 
   if (!tour) {
     notFound();

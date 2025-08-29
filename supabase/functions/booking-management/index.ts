@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+type SupabaseClient = ReturnType<typeof createClient>
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -43,7 +45,7 @@ serve(async (req) => {
   }
 })
 
-async function handleBookingManagement(req: Request, supabase: any) {
+async function handleBookingManagement(req: Request, supabase: SupabaseClient) {
   const { method } = req
 
   switch (method) {
@@ -61,7 +63,7 @@ async function handleBookingManagement(req: Request, supabase: any) {
   }
 }
 
-async function createBooking(req: Request, supabase: any) {
+async function createBooking(req: Request, supabase: SupabaseClient) {
   const authHeader = req.headers.get('Authorization')
   const { data: { user } } = await supabase.auth.getUser(authHeader?.replace('Bearer ', ''))
   
@@ -176,7 +178,7 @@ async function createBooking(req: Request, supabase: any) {
   )
 }
 
-async function updateBookingStatus(req: Request, supabase: any) {
+async function updateBookingStatus(req: Request, supabase: SupabaseClient) {
   const authHeader = req.headers.get('Authorization')
   const { data: { user } } = await supabase.auth.getUser(authHeader?.replace('Bearer ', ''))
   

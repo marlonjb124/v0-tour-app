@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
+type SupabaseClient = ReturnType<typeof createClient>
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -79,7 +81,7 @@ serve(async (req) => {
   }
 })
 
-async function getDashboardAnalytics(supabase: any) {
+async function getDashboardAnalytics(supabase: SupabaseClient) {
   // Get basic counts
   const [
     { count: totalTours },
@@ -136,7 +138,7 @@ async function getDashboardAnalytics(supabase: any) {
   }
 }
 
-async function getTourAnalytics(supabase: any) {
+async function getTourAnalytics(supabase: SupabaseClient) {
   // Get tour performance metrics
   const { data: tourMetrics } = await supabase
     .from('tours')
@@ -178,7 +180,7 @@ async function getTourAnalytics(supabase: any) {
   }
 }
 
-async function getRevenueAnalytics(supabase: any) {
+async function getRevenueAnalytics(supabase: SupabaseClient) {
   // Get detailed revenue breakdown
   const { data: revenueData } = await supabase
     .from('bookings')
@@ -194,8 +196,8 @@ async function getRevenueAnalytics(supabase: any) {
     .in('status', ['confirmed', 'completed'])
 
   // Revenue by month
-  const revenueByMonth = {}
-  revenueData?.forEach(booking => {
+  const revenueByMonth: Record<string, { revenue: number; bookings: number }> = {}
+  revenueData?.forEach((booking: any) => {
     const month = booking.created_at.substring(0, 7) // YYYY-MM
     if (!revenueByMonth[month]) {
       revenueByMonth[month] = { revenue: 0, bookings: 0 }
@@ -205,8 +207,8 @@ async function getRevenueAnalytics(supabase: any) {
   })
 
   // Revenue by city
-  const revenueByCity = {}
-  revenueData?.forEach(booking => {
+  const revenueByCity: Record<string, { revenue: number; bookings: number }> = {}
+  revenueData?.forEach((booking: any) => {
     const city = booking.tour?.city || 'Unknown'
     if (!revenueByCity[city]) {
       revenueByCity[city] = { revenue: 0, bookings: 0 }
@@ -216,8 +218,8 @@ async function getRevenueAnalytics(supabase: any) {
   })
 
   // Payment status breakdown
-  const paymentStatusBreakdown = {}
-  revenueData?.forEach(booking => {
+  const paymentStatusBreakdown: Record<string, { count: number; amount: number }> = {}
+  revenueData?.forEach((booking: any) => {
     const status = booking.payment_status
     if (!paymentStatusBreakdown[status]) {
       paymentStatusBreakdown[status] = { count: 0, amount: 0 }
@@ -227,7 +229,7 @@ async function getRevenueAnalytics(supabase: any) {
   })
 
   return {
-    total_revenue: revenueData?.reduce((sum, booking) => sum + booking.total_amount, 0) || 0,
+    total_revenue: revenueData?.reduce((sum: number, booking: any) => sum + booking.total_amount, 0) || 0,
     revenue_by_month: Object.entries(revenueByMonth).map(([month, data]) => ({
       month,
       ...data
@@ -240,15 +242,15 @@ async function getRevenueAnalytics(supabase: any) {
   }
 }
 
-async function getUserAnalytics(supabase: any) {
+async function getUserAnalytics(supabase: SupabaseClient) {
   // User registration trends
   const { data: users } = await supabase
     .from('users')
     .select('id, created_at, role, is_active, last_login')
 
   // Registration by month
-  const registrationsByMonth = {}
-  users?.forEach(user => {
+  const registrationsByMonth: Record<string, number> = {}
+  users?.forEach((user: any) => {
     const month = user.created_at.substring(0, 7)
     registrationsByMonth[month] = (registrationsByMonth[month] || 0) + 1
   })
@@ -257,7 +259,7 @@ async function getUserAnalytics(supabase: any) {
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
   
-  const activeUsers = users?.filter(user => 
+  const activeUsers = users?.filter((user: any) => 
     user.last_login && new Date(user.last_login) > thirtyDaysAgo
   ).length || 0
 
@@ -273,7 +275,7 @@ async function getUserAnalytics(supabase: any) {
     `)
 
   const userSegments = {
-    new_users: users?.filter(user => {
+    new_users: users?.filter((user: any) => {
       const createdDate = new Date(user.created_at)
       const thirtyDaysAgo = new Date()
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
@@ -290,13 +292,13 @@ async function getUserAnalytics(supabase: any) {
       registrations: count
     })),
     user_segments: userSegments,
-    top_customers: userBookings?.sort((a, b) => 
+    top_customers: userBookings?.sort((a: any, b: any) => 
       (b.bookings?.length || 0) - (a.bookings?.length || 0)
     ).slice(0, 10) || []
   }
 }
 
-async function generateRevenueChart(supabase: any, days: number) {
+async function generateRevenueChart(supabase: SupabaseClient, days: number) {
   const chartData = []
   
   for (let i = days - 1; i >= 0; i--) {
@@ -311,7 +313,7 @@ async function generateRevenueChart(supabase: any, days: number) {
       .lt('created_at', `${dateString}T23:59:59`)
       .in('status', ['confirmed', 'completed'])
     
-    const revenue = dayRevenue?.reduce((sum, booking) => sum + booking.total_amount, 0) || 0
+    const revenue = dayRevenue?.reduce((sum: number, booking: any) => sum + booking.total_amount, 0) || 0
     
     chartData.push({
       date: dateString,

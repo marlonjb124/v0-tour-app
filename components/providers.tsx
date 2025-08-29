@@ -25,29 +25,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
             // Retry up to 2 times for other errors
             return failureCount < 2
           },
-          onError: (error: any) => {
-            // Global error handling for Supabase queries
-            if (error?.message?.includes('Failed to fetch')) {
-              toast.error('Error de conexión con la base de datos.')
-            } else if (error?.message?.includes('JWT')) {
-              toast.error('Sesión expirada. Por favor, inicia sesión nuevamente.')
-            } else if (error?.message?.includes('row-level security')) {
-              toast.error('No tienes permisos para acceder a este recurso.')
-            }
-          },
         },
         mutations: {
           retry: false,
-          onError: (error: any) => {
-            // Global error handling for Supabase mutations
-            if (error?.message?.includes('duplicate key')) {
-              toast.error('Ya existe un registro con estos datos.')
-            } else if (error?.message?.includes('foreign key')) {
-              toast.error('No se puede completar la operación. Datos relacionados no encontrados.')
-            } else if (error?.message?.includes('check constraint')) {
-              toast.error('Los datos proporcionados no son válidos.')
-            }
-          },
         },
       },
     })

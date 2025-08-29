@@ -1,5 +1,5 @@
 import { createClient, createAdminClient } from '@/lib/supabase'
-import type { Database } from '@/lib/supabase'
+import type { Database } from '@/lib/database.types'
 import { User } from './auth-service'
 import { Tour, PaginatedResponse } from './tour-service'
 

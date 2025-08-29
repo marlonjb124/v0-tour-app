@@ -38,9 +38,14 @@ export default function AdminSetupPage() {
         return
       }
 
+      // Ensure we have a valid user ID
+      if (!targetUserId) {
+        throw new Error('User ID is required')
+      }
+
       // Create or update user profile with admin role
       const userData = {
-        id: targetUserId || supabaseUser?.id,
+        id: targetUserId,
         email: userEmail,
         full_name: supabaseUser?.user_metadata?.full_name || userEmail.split('@')[0] || 'Admin User',
         role: 'admin' as const,

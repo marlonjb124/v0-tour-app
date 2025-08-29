@@ -68,7 +68,7 @@ import {
   Calendar
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
-import { User } from '@/services/auth-service'
+import { User } from '@/lib/types'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -501,8 +501,8 @@ export default function UsersManagement() {
                   <h3 className="text-lg font-semibold">{selectedUser.full_name || 'Sin nombre'}</h3>
                   <p className="text-muted-foreground">{selectedUser.email}</p>
                   <div className="flex gap-2 mt-2">
-                    {getRoleBadge(selectedUser.role, selectedUser.is_verified)}
-                    {getStatusBadge(selectedUser.is_active)}
+                    {getRoleBadge(selectedUser.role || 'user', selectedUser.is_verified ?? false)}
+                    {getStatusBadge(selectedUser.is_active ?? false)}
                   </div>
                 </div>
               </div>
@@ -539,7 +539,7 @@ export default function UsersManagement() {
                     <label className="text-sm font-medium text-muted-foreground">Fecha de registro</label>
                     <div className="flex items-center gap-2 mt-1">
                       <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>{new Date(selectedUser.created_at).toLocaleDateString('es-ES')}</span>
+                      <span>{selectedUser.created_at ? new Date(selectedUser.created_at).toLocaleDateString('es-ES') : 'N/A'}</span>
                     </div>
                   </div>
 

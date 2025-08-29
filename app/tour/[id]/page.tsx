@@ -10,21 +10,22 @@ import TourCalendar from "@/components/tour-calendar"
 import { useQuery } from "@tanstack/react-query"
 import { TourService, Tour } from "@/services/tour-service"
 import { toast } from "react-hot-toast"
-import { useState } from "react"
+import { useState, use } from "react"
 
 interface TourDetailPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default function TourDetailPage({ params }: TourDetailPageProps) {
+  const resolvedParams = use(params)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
 
   // Fetch tour data from API
   const { data: tour, isLoading, error, refetch } = useQuery({
-    queryKey: ['tour', params.id],
-    queryFn: () => TourService.getTour(params.id),
+    queryKey: ['tour', resolvedParams.id],
+    queryFn: () => TourService.getTour(resolvedParams.id),
     staleTime: 10 * 60 * 1000, // 10 minutes
     retry: (failureCount, error: any) => {
       // Don't retry on 404 errors
@@ -120,7 +121,7 @@ export default function TourDetailPage({ params }: TourDetailPageProps) {
               {/* Thumbnail Gallery */}
               {tour.images && tour.images.length > 1 && (
                 <div className="grid grid-cols-4 gap-2">
-                  {tour.images.map((img, index) => (
+                  {tour.images.map((img: string, index: number) => (
                     <img
                       key={index}
                       src={img || "/placeholder.svg"}
@@ -216,7 +217,7 @@ export default function TourDetailPage({ params }: TourDetailPageProps) {
                 <CardContent className="p-6">
                   <h3 className="text-xl font-semibold mb-4">Lo más destacado</h3>
                   <ul className="space-y-2">
-                    {tour.highlights.map((highlight, index) => (
+                    {tour.highlights.map((highlight: string, index: number) => (
                       <li key={index} className="flex items-start gap-2">
                         <div className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0" />
                         <span className="text-sm">{highlight}</span>
@@ -233,7 +234,7 @@ export default function TourDetailPage({ params }: TourDetailPageProps) {
                 <CardContent className="p-6">
                   <h3 className="text-xl font-semibold mb-4">Qué incluye</h3>
                   <ul className="space-y-2">
-                    {tour.included.map((item, index) => (
+                    {tour.included.map((item: string, index: number) => (
                       <li key={index} className="flex items-start gap-2">
                         <div className="w-2 h-2 bg-secondary rounded-full mt-2 flex-shrink-0" />
                         <span className="text-sm">{item}</span>

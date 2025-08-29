@@ -12,6 +12,9 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 import type { Database } from './database.types'
 
+// Export Database type for use in other files
+export type { Database }
+
 let client: SupabaseClient<Database> | undefined
 
 // Client-side Supabase client (for browser/client components)

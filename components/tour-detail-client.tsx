@@ -46,7 +46,7 @@ export default function TourDetailClient({ tour }: TourDetailClientProps) {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-12">
           <div className="col-span-1">
             <Image 
-              src={tour.images?.[0] || '/placeholder.jpg'}
+              src={(tour.images as string[])?.[0] || '/placeholder.jpg'}
               alt={tour.title}
               width={800}
               height={600}
@@ -54,7 +54,7 @@ export default function TourDetailClient({ tour }: TourDetailClientProps) {
             />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            {(tour.images || []).slice(1, 5).map((img: string, index: number) => (
+            {((tour.images as string[]) || []).slice(1, 5).map((img: string, index: number) => (
               <Image 
                 key={index}
                 src={img}

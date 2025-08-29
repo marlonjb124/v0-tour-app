@@ -1,5 +1,5 @@
-import { createClient, createServerClient } from '@/lib/supabase'
-import type { Database } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase'
+import type { Database } from '@/lib/database.types'
 import { z } from 'zod'
 
 // Type definitions based on Supabase schema
@@ -526,13 +526,14 @@ export class BookingService {
     
     // Revenue by status
     const revenueByStatus = bookings.reduce((acc, booking) => {
-      acc[booking.status] = (acc[booking.status] || 0) + (booking.total_amount || 0)
+      const status = booking.status || 'unknown'
+      acc[status] = (acc[status] || 0) + (booking.total_amount || 0)
       return acc
     }, {} as Record<string, number>)
     
     // Bookings by month (simplified)
     const bookingsByMonth = bookings.reduce((acc, booking) => {
-      const month = booking.created_at.slice(0, 7) // YYYY-MM
+      const month = booking.created_at?.slice(0, 7) || 'unknown' // YYYY-MM
       const existing = acc.find(item => item.month === month)
       
       if (existing) {
@@ -571,7 +572,7 @@ export class BookingService {
 
   static isBookingCancellable(booking: Booking): boolean {
     const allowedStatuses = ['pending', 'confirmed']
-    return allowedStatuses.includes(booking.status)
+    return allowedStatuses.includes(booking.status || '')
   }
 
   static canRefundBooking(booking: Booking): boolean {

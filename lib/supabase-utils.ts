@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase'
-import type { Database } from '@/lib/supabase'
+import type { Database } from '@/lib/database.types'
+
+type BookingStatus = Database['public']['Enums']['booking_status']
 
 /**
  * Utility functions for common Supabase operations
@@ -117,7 +119,7 @@ export class QueryBuilder {
     size?: number
     userId?: string
     tourId?: string
-    status?: string
+    status?: BookingStatus
     dateFrom?: string
     dateTo?: string
   } = {}) {
@@ -227,6 +229,13 @@ export class DataTransformers {
    * Transform booking data for display
    */
   static transformBooking(booking: any) {
+    const statusColorMap: Record<string, string> = {
+      pending: 'yellow',
+      confirmed: 'green',
+      cancelled: 'red',
+      completed: 'blue'
+    }
+    
     return {
       ...booking,
       formattedAmount: new Intl.NumberFormat('es-ES', {
@@ -239,12 +248,7 @@ export class DataTransformers {
         month: 'long',
         day: 'numeric'
       }).format(new Date(booking.booking_date)),
-      statusColor: {
-        pending: 'yellow',
-        confirmed: 'green',
-        cancelled: 'red',
-        completed: 'blue'
-      }[booking.status] || 'gray'
+      statusColor: statusColorMap[booking.status] || 'gray'
     }
   }
 

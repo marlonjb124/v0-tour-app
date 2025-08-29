@@ -147,12 +147,9 @@ export default function TourCalendar({ tourId, tourTitle, tourPrice, tourInfo, o
       const bookingData = {
         tour_id: tourId,
         availability_id: selectedTimeSlot.id,
-        number_of_people: guestCount,
-        contact_name: user.full_name,
-        contact_email: user.email,
-        contact_phone: user.phone || '',
-        selected_date: selectedDate.toISOString().split('T')[0],
-        selected_time: selectedTime
+        guest_count: guestCount,
+        booking_date: selectedDate.toISOString().split('T')[0],
+        booking_time: selectedTime
       }
 
       const booking = await BookingService.createBooking(bookingData)

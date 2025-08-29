@@ -1,5 +1,5 @@
-import { createClient, createServerClient, createAdminClient } from '@/lib/supabase'
-import type { Database } from '@/lib/supabase'
+import { createClient, createAdminClient } from '@/lib/supabase'
+import type { Database } from '@/lib/database.types'
 
 // Define interfaces based on database schema
 export type Tour = Database['public']['Tables']['tours']['Row'] & {

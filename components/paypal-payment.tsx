@@ -203,7 +203,7 @@ export default function PayPalPayment({ bookingDetails, onSuccess, onError, onCa
           
           <PayPalScriptProvider
             options={{
-              "client-id": process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "",
+              clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "",
               currency: process.env.NEXT_PUBLIC_CURRENCY || "EUR",
               intent: "capture",
             }}
