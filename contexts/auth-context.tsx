@@ -73,11 +73,66 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [retryCount, setRetryCount] = useState(0)
   const supabase = createClient()
 
+  // Add timeout to prevent infinite loading
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (isLoading) {
+        console.warn('Authentication timeout - setting loading to false')
+        setError({
+          type: 'unknown',
+          message: 'Authentication timeout. Please refresh the page.',
+          retryable: true
+        })
+        setIsLoading(false)
+      }
+    }, 10000) // 10 second timeout
+
+    return () => clearTimeout(timeout)
+  }, [isLoading])
+
   // Initialize auth state on mount and listen for auth changes
   useEffect(() => {
+    console.log('Auth context initializing...')
+    
+    // Check environment variables
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    
+    console.log('Environment check:', {
+      hasUrl: !!supabaseUrl,
+      hasAnonKey: !!supabaseAnonKey,
+      url: supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : 'missing'
+    })
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      console.error('Missing Supabase environment variables')
+      setError({
+        type: 'unknown',
+        message: 'Missing Supabase configuration. Please check environment variables.',
+        retryable: false
+      })
+      setIsLoading(false)
+      return
+    }
+    
     // Get initial authenticated user using secure method
+    console.log('Calling supabase.auth.getUser()...')
     supabase.auth.getUser().then(({ data: { user }, error }) => {
-      if (user && !error) {
+      console.log('Initial auth check result:', { user: !!user, error })
+      
+      if (error) {
+        console.error('Auth error:', error)
+        setError({
+          type: 'database',
+          message: error.message || 'Authentication failed',
+          retryable: true
+        })
+        setIsLoading(false)
+        return
+      }
+      
+      if (user) {
+        console.log('User found, loading profile...')
         setSupabaseUser(user)
         // Get session after confirming user is authenticated
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -85,10 +140,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         })
         loadUserProfile(user.id)
       } else {
+        console.log('No authenticated user found')
         setSupabaseUser(null)
         setSession(null)
         setIsLoading(false)
       }
+    }).catch((error) => {
+      console.error('Unexpected error in auth initialization:', error)
+      setError({
+        type: 'unknown',
+        message: 'Failed to initialize authentication',
+        retryable: true
+      })
+      setIsLoading(false)
     })
 
     // Listen for auth changes - this is safe for state changes
@@ -132,6 +196,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Just set user to null and let the app handle the missing profile state
           setUser(null)
           setError(null) // No error - this is expected for users without profiles
+          setIsLoading(false)
           return
         }
         
@@ -156,17 +221,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           code: error.code,
           retryable: true
         })
+        setIsLoading(false)
+        return
         
       } else if (userProfile) {
         console.log('Successfully loaded user profile:', userProfile)
         setUser(userProfile)
         setError(null)
-        
-        // Update last login
-        await supabase
-          .from('users')
-          .update({ last_login: new Date().toISOString() })
-          .eq('id', userId)
       }
     } catch (error: any) {
       console.error('Unexpected error loading user profile:', error)

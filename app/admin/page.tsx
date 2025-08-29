@@ -18,7 +18,7 @@ import {
   ArrowUpRight
 } from 'lucide-react'
 import Link from 'next/link'
-import { toast } from 'react-hot-toast'
+import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -34,43 +34,67 @@ interface StatCardProps {
 }
 
 function StatCard({ title, value, icon: Icon, trend, href }: StatCardProps) {
-  const CardWrapper = href ? Link : 'div'
-  
-  return (
-    <CardWrapper href={href || ''}>
-      <Card className={`${href ? 'hover:shadow-md transition-shadow cursor-pointer' : ''}`}>
-        <CardContent className="p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">{title}</p>
-              <p className="text-2xl font-bold">{value}</p>
-              {trend && (
-                <div className={`flex items-center text-sm ${
-                  trend.isPositive ? 'text-green-600' : 'text-red-600'
-                }`}>
-                  {trend.isPositive ? (
-                    <TrendingUp className="h-3 w-3 mr-1" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3 mr-1" />
-                  )}
-                  {trend.value}% vs mes anterior
-                </div>
-              )}
+  if (href) {
+    return (
+      <Link href={href}>
+        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">{title}</p>
+                <p className="text-2xl font-bold">{value}</p>
+                {trend && (
+                  <div className={`flex items-center text-sm ${
+                    trend.isPositive ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    {trend.isPositive ? (
+                      <TrendingUp className="h-3 w-3 mr-1" />
+                    ) : (
+                      <TrendingDown className="h-3 w-3 mr-1" />
+                    )}
+                    {trend.value}% vs mes anterior
+                  </div>
+                )}
+              </div>
+              <div className="p-3 rounded-full bg-primary/10 text-primary">
+                <Icon className="h-5 w-5" />
+              </div>
             </div>
-            <div className={`p-3 rounded-full ${
-              href ? 'bg-primary/10 text-primary' : 'bg-muted/10 text-muted-foreground'
-            }`}>
-              <Icon className="h-5 w-5" />
-            </div>
-          </div>
-          {href && (
             <div className="mt-4 flex items-center text-sm text-muted-foreground">
               Ver detalles <ArrowUpRight className="h-3 w-3 ml-1" />
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </CardWrapper>
+          </CardContent>
+        </Card>
+      </Link>
+    )
+  }
+  
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">{title}</p>
+            <p className="text-2xl font-bold">{value}</p>
+            {trend && (
+              <div className={`flex items-center text-sm ${
+                trend.isPositive ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {trend.isPositive ? (
+                  <TrendingUp className="h-3 w-3 mr-1" />
+                ) : (
+                  <TrendingDown className="h-3 w-3 mr-1" />
+                )}
+                {trend.value}% vs mes anterior
+              </div>
+            )}
+          </div>
+          <div className="p-3 rounded-full bg-muted/10 text-muted-foreground">
+            <Icon className="h-5 w-5" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
