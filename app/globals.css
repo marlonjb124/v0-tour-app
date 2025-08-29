@@ -121,3 +121,66 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom scrollbar hiding utilities */
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
+  
+  /* Smooth scrolling for horizontal containers */
+  .scroll-smooth-x {
+    scroll-behavior: smooth;
+  }
+  
+  /* Custom line clamp utilities */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  /* Carousel 3D effects */
+  .carousel-3d {
+    perspective: 1000px;
+    transform-style: preserve-3d;
+  }
+  
+  .carousel-card {
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-origin: center center;
+    will-change: transform, opacity, filter;
+  }
+  
+  .carousel-card:hover {
+    transform-origin: center center;
+  }
+  
+  /* Drag cursor states */
+  .cursor-grab {
+    cursor: grab;
+  }
+  
+  .cursor-grabbing {
+    cursor: grabbing;
+  }
+  
+  /* Disable text selection during drag */
+  .select-none {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Smooth hover transitions */
+  .group-hover\:scale-102:hover {
+    transform: scale(1.02);
+  }
+}

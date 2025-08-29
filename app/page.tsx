@@ -5,16 +5,24 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { useState } from "react"
+import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import Link from "next/link"
-import { useQuery } from "@tanstack/react-query"
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { TourService, Tour } from "@/services/tour-service"
-import { toast } from "react-hot-toast"
+import { toast } from "sonner"
 
 export default function HomePage() {
   const [selectedCity, setSelectedCity] = useState<string>("")
   const [searchTerm, setSearchTerm] = useState<string>("") 
   const [searchInput, setSearchInput] = useState<string>("")  // For controlled input
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [isScrolling, setIsScrolling] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
+  const [startX, setStartX] = useState(0)
+  const [scrollLeft, setScrollLeft] = useState(0)
+  const [centerCardIndex, setCenterCardIndex] = useState(0)
+  const [featuredCenterCardIndex, setFeaturedCenterCardIndex] = useState(0)
+  const featuredScrollContainerRef = useRef<HTMLDivElement>(null)
 
   // Fetch cities
   const { data: cities = [] } = useQuery({
@@ -23,14 +31,26 @@ export default function HomePage() {
     staleTime: 30 * 60 * 1000, // 30 minutes
   })
 
-  // Fetch tours based on filters
-  const { data: toursData, isLoading, error } = useQuery({
-    queryKey: ['tours', selectedCity, searchTerm],
-    queryFn: () => TourService.getTours({
+  // Fetch tours with infinite query for horizontal scrolling
+  const {
+    data: toursData,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage
+  } = useInfiniteQuery({
+    queryKey: ['tours-infinite', selectedCity, searchTerm],
+    queryFn: ({ pageParam = 1 }) => TourService.getTours({
       city: selectedCity || undefined,
       search: searchTerm || undefined,
       is_active: true,
-    }),
+    }, pageParam, 6), // page, size - Load 6 tours per batch for horizontal scrolling
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, allPages) => {
+      const totalLoaded = allPages.reduce((acc, page) => acc + (page.items?.length || 0), 0)
+      return totalLoaded < (lastPage.total || 0) ? allPages.length + 1 : undefined
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
@@ -41,8 +61,180 @@ export default function HomePage() {
     staleTime: 10 * 60 * 1000, // 10 minutes
   })
 
-  const tours = toursData?.items || []
-  const totalTours = toursData?.total || 0
+  // Flatten tours from all pages
+  const tours = toursData?.pages.flatMap(page => page.items || []) || []
+  const totalTours = toursData?.pages[0]?.total || 0
+
+  // Horizontal scroll handler for infinite loading
+  const handleScroll = useCallback(() => {
+    const container = scrollContainerRef.current
+    if (!container || isScrolling || isFetchingNextPage || !hasNextPage) return
+
+    const { scrollLeft, scrollWidth, clientWidth } = container
+    const scrollPercentage = (scrollLeft + clientWidth) / scrollWidth
+
+    // Load more when 80% scrolled horizontally
+    if (scrollPercentage > 0.8) {
+      setIsScrolling(true)
+      fetchNextPage().finally(() => {
+        setTimeout(() => setIsScrolling(false), 1000) // Prevent rapid fetching
+      })
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage, isScrolling])
+
+  // Attach scroll listener
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (container) {
+      container.addEventListener('scroll', handleScroll)
+      return () => container.removeEventListener('scroll', handleScroll)
+    }
+  }, [handleScroll])
+
+  // Calculate center card index based on scroll position
+  const updateCenterCard = useCallback(() => {
+    const container = scrollContainerRef.current
+    if (!container || tours.length === 0) return
+
+    const containerWidth = container.clientWidth
+    const cardWidth = 320 // Fixed card width
+    const scrollLeft = container.scrollLeft
+    const centerPosition = scrollLeft + containerWidth / 2
+    const newCenterIndex = Math.round(centerPosition / (cardWidth + 24)) // 24px gap
+    
+    setCenterCardIndex(Math.max(0, Math.min(newCenterIndex, tours.length - 1)))
+  }, [tours.length])
+
+  // Drag scroll handlers
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    setIsDragging(true)
+    setStartX(e.pageX - (scrollContainerRef.current?.offsetLeft || 0))
+    setScrollLeft(scrollContainerRef.current?.scrollLeft || 0)
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.style.cursor = 'grabbing'
+    }
+  }, [])
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging || !scrollContainerRef.current) return
+    e.preventDefault()
+    const x = e.pageX - (scrollContainerRef.current.offsetLeft || 0)
+    const walk = (x - startX) * 2 // Scroll speed multiplier
+    scrollContainerRef.current.scrollLeft = scrollLeft - walk
+    updateCenterCard()
+  }, [isDragging, startX, scrollLeft, updateCenterCard])
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false)
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.style.cursor = 'grab'
+    }
+  }, [])
+
+  const handleMouseLeave = useCallback(() => {
+    setIsDragging(false)
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.style.cursor = 'grab'
+    }
+  }, [])
+
+  // Touch handlers for mobile
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    setIsDragging(true)
+    setStartX(e.touches[0].pageX - (scrollContainerRef.current?.offsetLeft || 0))
+    setScrollLeft(scrollContainerRef.current?.scrollLeft || 0)
+  }, [])
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isDragging || !scrollContainerRef.current) return
+    const x = e.touches[0].pageX - (scrollContainerRef.current.offsetLeft || 0)
+    const walk = (x - startX) * 1.5 // Touch scroll speed
+    scrollContainerRef.current.scrollLeft = scrollLeft - walk
+    updateCenterCard()
+  }, [isDragging, startX, scrollLeft, updateCenterCard])
+
+  const handleTouchEnd = useCallback(() => {
+    setIsDragging(false)
+  }, [])
+
+  // Update center card on scroll
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (container) {
+      const scrollHandler = () => {
+        updateCenterCard()
+        handleScroll()
+      }
+      container.addEventListener('scroll', scrollHandler)
+      return () => container.removeEventListener('scroll', scrollHandler)
+    }
+  }, [updateCenterCard, handleScroll])
+
+  // Featured tours center card calculation
+  const updateFeaturedCenterCard = useCallback(() => {
+    const container = featuredScrollContainerRef.current
+    if (!container || featuredTours.length === 0) return
+
+    const containerWidth = container.clientWidth
+    const cardWidth = 320 // Fixed card width
+    const scrollLeft = container.scrollLeft
+    const centerPosition = scrollLeft + containerWidth / 2
+    const newCenterIndex = Math.round(centerPosition / (cardWidth + 24)) // 24px gap
+    
+    setFeaturedCenterCardIndex(Math.max(0, Math.min(newCenterIndex, featuredTours.length - 1)))
+  }, [featuredTours.length])
+
+  // Featured tours drag handlers
+  const handleFeaturedMouseDown = useCallback((e: React.MouseEvent) => {
+    setIsDragging(true)
+    setStartX(e.pageX - (featuredScrollContainerRef.current?.offsetLeft || 0))
+    setScrollLeft(featuredScrollContainerRef.current?.scrollLeft || 0)
+    if (featuredScrollContainerRef.current) {
+      featuredScrollContainerRef.current.style.cursor = 'grabbing'
+    }
+  }, [])
+
+  const handleFeaturedMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging || !featuredScrollContainerRef.current) return
+    e.preventDefault()
+    const x = e.pageX - (featuredScrollContainerRef.current.offsetLeft || 0)
+    const walk = (x - startX) * 2
+    featuredScrollContainerRef.current.scrollLeft = scrollLeft - walk
+    updateFeaturedCenterCard()
+  }, [isDragging, startX, scrollLeft, updateFeaturedCenterCard])
+
+  const handleFeaturedMouseUp = useCallback(() => {
+    setIsDragging(false)
+    if (featuredScrollContainerRef.current) {
+      featuredScrollContainerRef.current.style.cursor = 'grab'
+    }
+  }, [])
+
+  const handleFeaturedMouseLeave = useCallback(() => {
+    setIsDragging(false)
+    if (featuredScrollContainerRef.current) {
+      featuredScrollContainerRef.current.style.cursor = 'grab'
+    }
+  }, [])
+
+  // Featured tours touch handlers
+  const handleFeaturedTouchStart = useCallback((e: React.TouchEvent) => {
+    setIsDragging(true)
+    setStartX(e.touches[0].pageX - (featuredScrollContainerRef.current?.offsetLeft || 0))
+    setScrollLeft(featuredScrollContainerRef.current?.scrollLeft || 0)
+  }, [])
+
+  const handleFeaturedTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isDragging || !featuredScrollContainerRef.current) return
+    const x = e.touches[0].pageX - (featuredScrollContainerRef.current.offsetLeft || 0)
+    const walk = (x - startX) * 1.5
+    featuredScrollContainerRef.current.scrollLeft = scrollLeft - walk
+    updateFeaturedCenterCard()
+  }, [isDragging, startX, scrollLeft, updateFeaturedCenterCard])
+
+  const handleFeaturedTouchEnd = useCallback(() => {
+    setIsDragging(false)
+  }, [])
 
   const handleSearch = () => {
     setSearchTerm(searchInput.trim())
@@ -184,7 +376,7 @@ export default function HomePage() {
             ))}
           </div>
 
-          {/* Tours Grid */}
+          {/* Horizontal Tours Scroll */}
           <div className="relative">
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
@@ -201,86 +393,210 @@ export default function HomePage() {
               </div>
             ) : (
               <>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {tours.map((tour) => (
-                    <Link key={tour.id} href={`/tours/${tour.id}`}>
-                      <Card className="group cursor-pointer hover:shadow-lg transition-shadow duration-200">
-                        <div className="relative overflow-hidden rounded-t-lg">
-                          <img
-                            src={tour.images?.[0] || "/placeholder.svg"}
-                            alt={tour.title}
-                            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
-                          />
-                          {tour.discount_percentage && (
-                            <Badge className="absolute top-3 left-3 bg-red-500 hover:bg-red-500 text-white">
-                              -{tour.discount_percentage}%
-                            </Badge>
-                          )}
-                        </div>
-
-                        <CardContent className="p-4">
-                          <div className="mb-2">
-                            <Badge variant="secondary" className="text-xs font-medium mb-2">
-                              {tour.city?.toUpperCase()}
-                            </Badge>
-                          </div>
-
-                          <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
-                            {tour.title}
-                          </h3>
-
-                          <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{tour.description}</p>
-
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1">
-                              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                              <span className="font-medium text-sm">{tour.rating}</span>
-                              <span className="text-muted-foreground text-sm">({tour.review_count?.toLocaleString()})</span>
+                {/* Carousel Container with Drag Scrolling */}
+                <div 
+                  ref={scrollContainerRef}
+                  className="overflow-x-auto scrollbar-hide pb-4 cursor-grab select-none"
+                  style={{ 
+                    scrollbarWidth: 'none', 
+                    msOverflowStyle: 'none',
+                    scrollBehavior: isDragging ? 'auto' : 'smooth'
+                  }}
+                  onMouseDown={handleMouseDown}
+                  onMouseMove={handleMouseMove}
+                  onMouseUp={handleMouseUp}
+                  onMouseLeave={handleMouseLeave}
+                  onTouchStart={handleTouchStart}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={handleTouchEnd}
+                >
+                  <div className="flex gap-6 min-w-max px-4 py-8">
+                    {tours.map((tour, index) => {
+                      const isCenter = index === centerCardIndex
+                      const distance = Math.abs(index - centerCardIndex)
+                      const scale = isCenter ? 1.1 : Math.max(0.85, 1 - distance * 0.1)
+                      const opacity = isCenter ? 1 : Math.max(0.6, 1 - distance * 0.2)
+                      const zIndex = isCenter ? 20 : Math.max(1, 10 - distance)
+                      
+                      return (
+                        <Link key={`${tour.id}-${index}`} href={`/tours/${tour.id}`}>
+                          <Card 
+                            className={`
+                              group cursor-pointer transition-all duration-500 ease-out flex-shrink-0
+                              ${isCenter 
+                                ? 'hover:shadow-2xl shadow-xl border-primary/20' 
+                                : 'hover:shadow-lg shadow-md'
+                              }
+                            `}
+                            style={{
+                              width: '320px',
+                              transform: `scale(${scale}) translateZ(0)`,
+                              opacity: opacity,
+                              zIndex: zIndex,
+                              filter: isCenter ? 'none' : 'blur(0.5px)',
+                            }}
+                          >
+                            <div className="relative overflow-hidden rounded-t-lg">
+                              <img
+                                src={(() => {
+                                  if (Array.isArray(tour.images) && tour.images.length > 0) {
+                                    return String(tour.images[0])
+                                  }
+                                  return "/placeholder.svg"
+                                })()}
+                                alt={tour.title}
+                                className={`
+                                  w-full object-cover transition-transform duration-500
+                                  ${isCenter 
+                                    ? 'h-56 group-hover:scale-105' 
+                                    : 'h-48 hover:scale-102'
+                                  }
+                                `}
+                                draggable={false}
+                              />
+                              {tour.discount_percentage && (
+                                <Badge className="absolute top-3 left-3 bg-red-500 hover:bg-red-500 text-white">
+                                  -{tour.discount_percentage}%
+                                </Badge>
+                              )}
+                              {isCenter && (
+                                <Badge className="absolute top-3 right-3 bg-primary hover:bg-primary text-white animate-pulse">
+                                  ⭐ Destacado
+                                </Badge>
+                              )}
                             </div>
 
-                            <div className="text-right">
-                              <div className="text-sm text-muted-foreground">Desde</div>
-                              <div className="flex items-center gap-2">
-                                {tour.original_price && tour.original_price > tour.price && (
-                                  <span className="text-xs text-muted-foreground line-through">
-                                    ${tour.original_price.toFixed(2)}
-                                  </span>
-                                )}
-                                <span className="font-bold text-lg">${tour.price.toFixed(2)}</span>
+                            <CardContent className={`${isCenter ? 'p-6' : 'p-4'}`}>
+                              <div className="mb-2">
+                                <Badge variant="secondary" className="text-xs font-medium mb-2">
+                                  {tour.city?.toUpperCase()}
+                                </Badge>
                               </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  ))}
+
+                              <h3 className={`
+                                font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2
+                                ${isCenter ? 'text-xl' : 'text-lg'}
+                              `}>
+                                {tour.title}
+                              </h3>
+
+                              <p className={`
+                                text-muted-foreground mb-4 line-clamp-2
+                                ${isCenter ? 'text-base' : 'text-sm'}
+                              `}>
+                                {tour.description}
+                              </p>
+
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1">
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  <span className={`font-medium ${isCenter ? 'text-base' : 'text-sm'}`}>
+                                    {tour.rating}
+                                  </span>
+                                  <span className={`text-muted-foreground ${isCenter ? 'text-sm' : 'text-xs'}`}>
+                                    ({tour.review_count?.toLocaleString()})
+                                  </span>
+                                </div>
+
+                                <div className="text-right">
+                                  <div className={`text-muted-foreground ${isCenter ? 'text-sm' : 'text-xs'}`}>
+                                    Desde
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {tour.original_price && tour.original_price > tour.price && (
+                                      <span className={`text-muted-foreground line-through ${
+                                        isCenter ? 'text-sm' : 'text-xs'
+                                      }`}>
+                                        ${tour.original_price.toFixed(2)}
+                                      </span>
+                                    )}
+                                    <span className={`font-bold ${
+                                      isCenter ? 'text-2xl text-primary' : 'text-lg'
+                                    }`}>
+                                      ${tour.price.toFixed(2)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      )
+                    })}
+                    
+                    {/* Loading indicator for infinite scroll */}
+                    {isFetchingNextPage && (
+                      <div className="flex items-center justify-center w-80 flex-shrink-0">
+                        <div className="flex flex-col items-center py-12">
+                          <Loader2 className="h-8 w-8 animate-spin" />
+                          <span className="mt-2 text-sm text-muted-foreground">Cargando más tours...</span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* End indicator */}
+                    {!hasNextPage && tours.length > 0 && (
+                      <div className="flex items-center justify-center w-80 flex-shrink-0">
+                        <div className="text-center py-12">
+                          <p className="text-sm text-muted-foreground">¡Has visto todos los tours disponibles!</p>
+                          <p className="text-xs text-muted-foreground mt-1">Total: {totalTours} tours</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Show total count */}
-                {totalTours > 0 && (
-                  <div className="text-center mt-8 text-sm text-muted-foreground">
-                    Mostrando {tours.length} de {totalTours} tours
-                  </div>
-                )}
+                {/* Navigation Arrows */}
+                <div className="absolute inset-y-0 left-0 flex items-center">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full bg-background/80 backdrop-blur-sm shadow-lg hover:bg-background border-2 ml-2"
+                    onClick={() => {
+                      const container = scrollContainerRef.current
+                      if (container) {
+                        container.scrollBy({ left: -350, behavior: 'smooth' })
+                      }
+                    }}
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </Button>
+                </div>
+                
+                <div className="absolute inset-y-0 right-0 flex items-center">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full bg-background/80 backdrop-blur-sm shadow-lg hover:bg-background border-2 mr-2"
+                    onClick={() => {
+                      const container = scrollContainerRef.current
+                      if (container) {
+                        container.scrollBy({ left: 350, behavior: 'smooth' })
+                      }
+                    }}
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </Button>
+                </div>
+
+                {/* Drag Instructions */}
+                <div className="text-center mt-8">
+                  <p className="text-sm text-muted-foreground flex items-center justify-center gap-2 mb-2">
+                    <span className="inline-block animate-bounce">👆</span>
+                    Arrastra las tarjetas o desliza para explorar tours
+                    <span className="inline-block animate-bounce">👆</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    El tour del centro aparece destacado • Mostrando {tours.length} de {totalTours} tours
+                  </p>
+                  {centerCardIndex < tours.length && (
+                    <p className="text-xs text-primary font-medium">
+                      Viendo: {tours[centerCardIndex]?.title}
+                    </p>
+                  )}
+                </div>
               </>
             )}
-
-            {/* Navigation Arrows */}
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 rounded-full bg-background shadow-lg hover:bg-muted"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-
-            <Button
-              variant="outline"
-              size="icon"
-              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 rounded-full bg-background shadow-lg hover:bg-muted"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </Button>
           </div>
         </div>
       </section>
@@ -291,70 +607,201 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold mb-8 text-center">Tours Destacados</h2>
           <p className="text-center text-muted-foreground mb-12">Los tours más populares y mejor valorados</p>
 
-          {/* Featured Tours Grid */}
+          {/* Featured Tours Carousel */}
           <div className="relative">
             {featuredTours.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">No hay tours destacados disponibles en este momento.</p>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {featuredTours.map((tour) => (
-                  <Link key={`featured-${tour.id}`} href={`/tours/${tour.id}`}>
-                    <Card className="group cursor-pointer hover:shadow-lg transition-shadow duration-200">
-                      <div className="relative overflow-hidden rounded-t-lg">
-                        <img
-                          src={tour.images?.[0] || "/placeholder.svg"}
-                          alt={tour.title}
-                          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
-                        />
-                        <Badge className="absolute top-3 left-3 bg-blue-500 hover:bg-blue-500 text-white">
-                          ⭐ Destacado
-                        </Badge>
-                        {tour.discount_percentage && (
-                          <Badge className="absolute top-3 right-3 bg-red-500 hover:bg-red-500 text-white">
-                            -{tour.discount_percentage}%
-                          </Badge>
-                        )}
-                      </div>
-
-                      <CardContent className="p-4">
-                        <div className="mb-2">
-                          <Badge variant="secondary" className="text-xs font-medium mb-2">
-                            {tour.city?.toUpperCase()}
-                          </Badge>
-                        </div>
-
-                        <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors">
-                          {tour.title}
-                        </h3>
-
-                        <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{tour.description}</p>
-
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1">
-                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                            <span className="font-medium text-sm">{tour.rating}</span>
-                            <span className="text-muted-foreground text-sm">({tour.review_count?.toLocaleString()})</span>
-                          </div>
-
-                          <div className="text-right">
-                            <div className="text-sm text-muted-foreground">Desde</div>
-                            <div className="flex items-center gap-2">
-                              {tour.original_price && tour.original_price > tour.price && (
-                                <span className="text-xs text-muted-foreground line-through">
-                                  ${tour.original_price.toFixed(2)}
-                                </span>
+              <>
+                {/* Carousel Container with Drag Scrolling */}
+                <div 
+                  ref={featuredScrollContainerRef}
+                  className="overflow-x-auto scrollbar-hide pb-4 cursor-grab select-none"
+                  style={{ 
+                    scrollbarWidth: 'none', 
+                    msOverflowStyle: 'none',
+                    scrollBehavior: isDragging ? 'auto' : 'smooth'
+                  }}
+                  onMouseDown={handleFeaturedMouseDown}
+                  onMouseMove={handleFeaturedMouseMove}
+                  onMouseUp={handleFeaturedMouseUp}
+                  onMouseLeave={handleFeaturedMouseLeave}
+                  onTouchStart={handleFeaturedTouchStart}
+                  onTouchMove={handleFeaturedTouchMove}
+                  onTouchEnd={handleFeaturedTouchEnd}
+                  onScroll={updateFeaturedCenterCard}
+                >
+                  <div className="flex gap-6 min-w-max px-4 py-8">
+                    {featuredTours.map((tour, index) => {
+                      const isCenter = index === featuredCenterCardIndex
+                      const distance = Math.abs(index - featuredCenterCardIndex)
+                      const scale = isCenter ? 1.1 : Math.max(0.85, 1 - distance * 0.1)
+                      const opacity = isCenter ? 1 : Math.max(0.6, 1 - distance * 0.2)
+                      const zIndex = isCenter ? 20 : Math.max(1, 10 - distance)
+                      
+                      return (
+                        <Link key={`featured-${tour.id}-${index}`} href={`/tours/${tour.id}`}>
+                          <Card 
+                            className={`
+                              group cursor-pointer transition-all duration-500 ease-out flex-shrink-0
+                              ${isCenter 
+                                ? 'hover:shadow-2xl shadow-xl border-primary/20' 
+                                : 'hover:shadow-lg shadow-md'
+                              }
+                            `}
+                            style={{
+                              width: '320px',
+                              transform: `scale(${scale}) translateZ(0)`,
+                              opacity: opacity,
+                              zIndex: zIndex,
+                              filter: isCenter ? 'none' : 'blur(0.5px)',
+                            }}
+                          >
+                            <div className="relative overflow-hidden rounded-t-lg">
+                              <img
+                                src={(() => {
+                                  if (Array.isArray(tour.images) && tour.images.length > 0) {
+                                    return String(tour.images[0])
+                                  }
+                                  return "/placeholder.svg"
+                                })()}
+                                alt={tour.title}
+                                className={`
+                                  w-full object-cover transition-transform duration-500
+                                  ${isCenter 
+                                    ? 'h-56 group-hover:scale-105' 
+                                    : 'h-48 hover:scale-102'
+                                  }
+                                `}
+                                draggable={false}
+                              />
+                              <Badge className="absolute top-3 left-3 bg-blue-500 hover:bg-blue-500 text-white">
+                                ⭐ Destacado
+                              </Badge>
+                              {tour.discount_percentage && (
+                                <Badge className="absolute top-3 right-3 bg-red-500 hover:bg-red-500 text-white">
+                                  -{tour.discount_percentage}%
+                                </Badge>
                               )}
-                              <span className="font-bold text-lg">${tour.price.toFixed(2)}</span>
+                              {isCenter && (
+                                <Badge className="absolute bottom-3 left-3 bg-primary hover:bg-primary text-white animate-pulse">
+                                  🏆 Más Popular
+                                </Badge>
+                              )}
                             </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </Link>
-                ))}
-              </div>
+
+                            <CardContent className={`${isCenter ? 'p-6' : 'p-4'}`}>
+                              <div className="mb-2">
+                                <Badge variant="secondary" className="text-xs font-medium mb-2">
+                                  {tour.city?.toUpperCase()}
+                                </Badge>
+                              </div>
+
+                              <h3 className={`
+                                font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2
+                                ${isCenter ? 'text-xl' : 'text-lg'}
+                              `}>
+                                {tour.title}
+                              </h3>
+
+                              <p className={`
+                                text-muted-foreground mb-4 line-clamp-2
+                                ${isCenter ? 'text-base' : 'text-sm'}
+                              `}>
+                                {tour.description}
+                              </p>
+
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1">
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  <span className={`font-medium ${isCenter ? 'text-base' : 'text-sm'}`}>
+                                    {tour.rating}
+                                  </span>
+                                  <span className={`text-muted-foreground ${isCenter ? 'text-sm' : 'text-xs'}`}>
+                                    ({tour.review_count?.toLocaleString()})
+                                  </span>
+                                </div>
+
+                                <div className="text-right">
+                                  <div className={`text-muted-foreground ${isCenter ? 'text-sm' : 'text-xs'}`}>
+                                    Desde
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {tour.original_price && tour.original_price > tour.price && (
+                                      <span className={`text-muted-foreground line-through ${
+                                        isCenter ? 'text-sm' : 'text-xs'
+                                      }`}>
+                                        ${tour.original_price.toFixed(2)}
+                                      </span>
+                                    )}
+                                    <span className={`font-bold ${
+                                      isCenter ? 'text-2xl text-primary' : 'text-lg'
+                                    }`}>
+                                      ${tour.price.toFixed(2)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Navigation Arrows for Featured Tours */}
+                <div className="absolute inset-y-0 left-0 flex items-center">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full bg-background/80 backdrop-blur-sm shadow-lg hover:bg-background border-2 ml-2"
+                    onClick={() => {
+                      const container = featuredScrollContainerRef.current
+                      if (container) {
+                        container.scrollBy({ left: -350, behavior: 'smooth' })
+                      }
+                    }}
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </Button>
+                </div>
+                
+                <div className="absolute inset-y-0 right-0 flex items-center">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full bg-background/80 backdrop-blur-sm shadow-lg hover:bg-background border-2 mr-2"
+                    onClick={() => {
+                      const container = featuredScrollContainerRef.current
+                      if (container) {
+                        container.scrollBy({ left: 350, behavior: 'smooth' })
+                      }
+                    }}
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </Button>
+                </div>
+
+                {/* Featured Tours Instructions */}
+                <div className="text-center mt-8">
+                  <p className="text-sm text-muted-foreground flex items-center justify-center gap-2 mb-2">
+                    <span className="inline-block animate-bounce">🏆</span>
+                    Arrastra para explorar nuestros tours más populares
+                    <span className="inline-block animate-bounce">🏆</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Tours con las mejores calificaciones • {featuredTours.length} tours destacados
+                  </p>
+                  {featuredCenterCardIndex < featuredTours.length && (
+                    <p className="text-xs text-primary font-medium">
+                      Destacado: {featuredTours[featuredCenterCardIndex]?.title}
+                    </p>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </div>

@@ -14,8 +14,8 @@ const manrope = Manrope({
 })
 
 export const metadata: Metadata = {
-  title: "Tours España - Descubre la Cultura",
-  description: "Monumentos, atracciones y experiencias alucinantes. ¿Cuál será tu próxima aventura?",
+  title: "Tours Perú - Descubre la Cultura",
+  description: "Monumentos, atracciones y experiencias alucinantes en Perú. ¿Cuál será tu próxima aventura?",
   generator: "v0.app",
 }
 

@@ -130,8 +130,8 @@ If you have existing data, create migration scripts:
 ```sql
 -- Example: Insert sample tours
 INSERT INTO public.tours (title, description, city, location, meeting_point, price, duration, max_group_size, cancellation_policy) VALUES
-('Historic City Tour', 'Explore the historic center', 'Madrid', 'City Center', 'Plaza Mayor', 45.00, '3 hours', 15, 'Free cancellation up to 24 hours'),
-('Food Tour', 'Taste local cuisine', 'Barcelona', 'Gothic Quarter', 'Cathedral', 65.00, '4 hours', 12, 'Free cancellation up to 48 hours');
+('Historic City Tour', 'Explore the historic center', 'Lima', 'City Center', 'Plaza de Armas', 45.00, '3 hours', 15, 'Free cancellation up to 24 hours'),
+('Food Tour', 'Taste local cuisine', 'Cusco', 'San Blas Quarter', 'Cathedral', 65.00, '4 hours', 12, 'Free cancellation up to 48 hours');
 ```
 
 ### Phase 6: Production Deployment

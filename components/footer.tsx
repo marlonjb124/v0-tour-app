@@ -12,7 +12,7 @@ export default function Footer() {
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
                 <MapPin className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="font-bold text-lg">Tours España</span>
+              <span className="font-bold text-lg">Tours Perú</span>
             </div>
             <p className="text-sm text-muted-foreground">
               Descubre la cultura española con nuestros tours únicos y experiencias inolvidables.
@@ -51,34 +51,34 @@ export default function Footer() {
             <h4 className="font-semibold">Destinos</h4>
             <div className="space-y-2">
               <Link
-                href="/?city=Barcelona"
+                href="/?city=Lima"
                 className="block text-sm text-muted-foreground hover:text-primary transition-colors"
               >
-                Barcelona
+                Lima
               </Link>
               <Link
-                href="/?city=Madrid"
+                href="/?city=Cusco"
                 className="block text-sm text-muted-foreground hover:text-primary transition-colors"
               >
-                Madrid
+                Cusco
               </Link>
               <Link
-                href="/?city=Sevilla"
+                href="/?city=Arequipa"
                 className="block text-sm text-muted-foreground hover:text-primary transition-colors"
               >
-                Sevilla
+                Arequipa
               </Link>
               <Link
-                href="/?city=Valencia"
+                href="/?city=Trujillo"
                 className="block text-sm text-muted-foreground hover:text-primary transition-colors"
               >
-                Valencia
+                Trujillo
               </Link>
               <Link
-                href="/?city=Benidorm"
+                href="/?city=Ica"
                 className="block text-sm text-muted-foreground hover:text-primary transition-colors"
               >
-                Benidorm
+                Ica
               </Link>
             </div>
           </div>
@@ -89,18 +89,18 @@ export default function Footer() {
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Phone className="w-4 h-4" />
-                <span>+34 900 123 456</span>
+                <span>+51 1 234 5678</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Mail className="w-4 h-4" />
-                <span>info@toursespana.com</span>
+                <span>info@toursperu.com</span>
               </div>
               <div className="flex items-start gap-2 text-sm text-muted-foreground">
                 <MapPin className="w-4 h-4 mt-0.5" />
                 <span>
-                  Calle Gran Vía, 123
+                  Av. José Larco, 345
                   <br />
-                  28013 Madrid, España
+                  Miraflores, Lima 15074, Perú
                 </span>
               </div>
             </div>
@@ -108,7 +108,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
-          <p>&copy; 2025 Tours España. Todos los derechos reservados.</p>
+          <p>&copy; 2025 Tours Perú. Todos los derechos reservados.</p>
         </div>
       </div>
     </footer>
