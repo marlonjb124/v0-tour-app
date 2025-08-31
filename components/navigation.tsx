@@ -32,16 +32,16 @@ export default function Navigation() {
             <Link href="/#about" className="text-sm font-medium hover:text-primary transition-colors">
               Sobre Nosotros
             </Link>
-            <Link href="/#peru-in" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link href="/peru-in" className="text-sm font-medium hover:text-primary transition-colors">
               Perú IN
             </Link>
-            <Link href="/#peru-out" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link href="/peru-out" className="text-sm font-medium hover:text-primary transition-colors">
               Perú OUT
             </Link>
-            <Link href="/#tickets" className="text-sm font-medium hover:text-primary transition-colors">
+            <Link href="/tickets" className="text-sm font-medium hover:text-primary transition-colors">
               Tickets
             </Link>
-            <Link href="/#mapa-interactivo" className="text-muted-foreground transition-colors hover:text-foreground">
+            <Link href="/mapa-interactivo" className="text-muted-foreground transition-colors hover:text-foreground">
               Mapa del Perú interactivo
             </Link>
           </div>
@@ -73,28 +73,28 @@ export default function Navigation() {
                 Sobre Nosotros
               </Link>
               <Link
-                href="/#peru-in"
+                href="/peru-in"
                 className="text-sm font-medium hover:text-primary transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Perú IN
               </Link>
               <Link
-                href="/#peru-out"
+                href="/peru-out"
                 className="text-sm font-medium hover:text-primary transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Perú OUT
               </Link>
               <Link
-                href="/#tickets"
+                href="/tickets"
                 className="text-sm font-medium hover:text-primary transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Tickets
               </Link>
               <Link
-                href="/#mapa-interactivo"
+                href="/mapa-interactivo"
                 className="text-sm font-medium hover:text-primary transition-colors"
                 onClick={() => setIsMenuOpen(false)}
               >

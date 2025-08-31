@@ -27,6 +27,11 @@ export interface TourFilters {
   has_availability?: boolean
   is_featured?: boolean
   is_active?: boolean
+  max_days?: number
+  min_days?: number
+  category?: string
+  location_type?: 'domestic' | 'international'
+  tour_type?: 'tour' | 'ticket'
 }
 
 
@@ -75,12 +80,32 @@ export class TourService {
     if (filters.is_featured !== undefined) {
       query = query.eq('is_featured', filters.is_featured)
     }
+    
+    if (filters.location_type !== undefined) {
+      query = query.eq('location_type', filters.location_type)
+    }
+    
+    if (filters.tour_type !== undefined) {
+      query = query.eq('tour_type', filters.tour_type)
+    }
+    
+    if (filters.max_days !== undefined) {
+      query = query.lte('duration', filters.max_days)
+    }
+    
+    if (filters.min_days !== undefined) {
+      query = query.gte('duration', filters.min_days)
+    }
+    
+    if (filters.category !== undefined) {
+      query = query.eq('category', filters.category)
+    }
 
     const { data, error, count } = await query
 
     if (error) {
       console.error('Error fetching tours:', error)
-      throw new Error(`Failed to fetch tours: ${error.message}`)
+      throw new Error(`Failed to fetch tours: ${error.message || 'Unknown database error'}`)
     }
 
     // Add discount percentage calculation
@@ -190,6 +215,102 @@ export class TourService {
     size = 12
   ): Promise<PaginatedResponse<Tour>> {
     return this.getTours({ search: query }, page, size)
+  }
+
+  /**
+   * Get tours by category (peru_in, peru_out, one_day, multi_day)
+   */
+  static async getToursByCategory(
+    category: string,
+    filters: TourFilters = {},
+    page = 1,
+    size = 12
+  ): Promise<PaginatedResponse<Tour>> {
+    return this.getTours({ ...filters, category }, page, size);
+  }
+
+  /**
+   * Get tours by duration
+   */
+  static async getToursByDuration(
+    maxDays: number | null = null,
+    minDays: number | null = null,
+    filters: TourFilters = {},
+    page = 1,
+    size = 12
+  ): Promise<PaginatedResponse<Tour>> {
+    const durationFilters = { ...filters };
+    if (maxDays !== null) {
+      durationFilters.max_days = maxDays;
+    }
+    if (minDays !== null) {
+      durationFilters.min_days = minDays;
+    }
+    return this.getTours(durationFilters, page, size);
+  }
+
+  /**
+   * Get tours with coordinates for map
+   */
+  static async getToursWithCoordinates(
+    filters: TourFilters = {}
+  ): Promise<Tour[]> {
+    const supabase = createClient();
+    
+    let query = supabase
+      .from('tours')
+      .select('*')
+      .eq('is_active', true)
+      .not('coordinates', 'is', null);
+      
+    // Apply additional filters
+    if (filters.category) {
+      query = query.eq('category', filters.category);
+    }
+    
+    if (filters.city) {
+      query = query.eq('city', filters.city);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+      console.error('Error fetching tours with coordinates:', error);
+      throw new Error(`Failed to fetch tours with coordinates: ${error.message}`);
+    }
+    
+    // Add discount percentage calculation
+    const toursWithDiscount = (data || []).map(tour => ({
+      ...tour,
+      discount_percentage: tour.original_price 
+        ? Math.round(((tour.original_price - tour.price) / tour.original_price) * 100)
+        : undefined
+    }));
+    
+    return toursWithDiscount;
+  }
+
+  /**
+   * Get tours by location type (domestic/international)
+   */
+  static async getToursByLocationType(
+    locationType: 'domestic' | 'international',
+    filters: TourFilters = {},
+    page = 1,
+    size = 12
+  ): Promise<PaginatedResponse<Tour>> {
+    return this.getTours({ ...filters, location_type: locationType }, page, size);
+  }
+
+  /**
+   * Get tickets only (tour_type = 'ticket')
+   */
+  static async getTickets(
+    filters: TourFilters = {},
+    page = 1,
+    size = 12
+  ): Promise<PaginatedResponse<Tour>> {
+    return this.getTours({ ...filters, tour_type: 'ticket' }, page, size);
   }
 
   /**

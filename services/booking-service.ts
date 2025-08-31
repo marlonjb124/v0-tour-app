@@ -60,6 +60,20 @@ export interface BookingRequest {
   special_requests?: string
 }
 
+// Payment interfaces
+export interface PaymentCreate {
+  booking_id: string
+  amount: number
+  currency: string
+  payment_method: string
+}
+
+export interface PaymentOrder {
+  id: string
+  status: string
+  links: Array<{ href: string; rel: string; method: string }>
+}
+
 // Zod schemas for validation
 export const bookingRequestSchema = z.object({
   tour_id: z.string().uuid(),
@@ -93,17 +107,22 @@ export class BookingService {
       throw new Error(`Failed to fetch tour availability: ${error.message}`)
     }
 
-    // Transform data into calendar format
-    const days: AvailabilityCalendarDay[] = (data || []).map(availability => ({
-      date: availability.available_date,
-      time_slots: (availability.time_slots as string[]).map((time, index) => ({
+    // Transform data into calendar format with individual time slot availability
+    const days: AvailabilityCalendarDay[] = (data || []).map((availability: any) => {
+      const timeSlots = (availability.time_slots as string[]).map((time, index) => ({
         id: `${availability.id}-${index}`,
         time,
         available_spots: availability.available_spots,
-        is_available: availability.is_available && availability.available_spots > 0
-      })),
-      has_availability: availability.is_available && availability.available_spots > 0
-    }))
+        is_available: availability.is_available && availability.available_spots > 0,
+        price: availability.price || undefined
+      }))
+
+      return {
+        date: availability.available_date,
+        time_slots: timeSlots,
+        has_availability: availability.is_available && availability.available_spots > 0
+      }
+    })
 
     return {
       tour_id: tourId,

@@ -22,7 +22,11 @@ export default function HomePage() {
   const [scrollLeft, setScrollLeft] = useState(0)
   const [centerCardIndex, setCenterCardIndex] = useState(0)
   const [featuredCenterCardIndex, setFeaturedCenterCardIndex] = useState(0)
+  const [oneDayCenterCardIndex, setOneDayCenterCardIndex] = useState(0)
+  const [multiDayCenterCardIndex, setMultiDayCenterCardIndex] = useState(0)
   const featuredScrollContainerRef = useRef<HTMLDivElement>(null)
+  const oneDayScrollContainerRef = useRef<HTMLDivElement>(null)
+  const multiDayScrollContainerRef = useRef<HTMLDivElement>(null)
 
   // Fetch cities
   const { data: cities = [] } = useQuery({
@@ -61,9 +65,81 @@ export default function HomePage() {
     staleTime: 10 * 60 * 1000, // 10 minutes
   })
 
+  // Fetch one-day tours
+  const { data: oneDayToursData = { items: [] } } = useQuery({
+    queryKey: ['one-day-tours'],
+    queryFn: () => TourService.getToursByDuration(1, null, { is_active: true }, 1, 8),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  })
+  
+  // Fetch multi-day tours
+  const { data: multiDayToursData = { items: [] } } = useQuery({
+    queryKey: ['multi-day-tours'],
+    queryFn: () => TourService.getToursByDuration(null, 2, { is_active: true }, 1, 8),
+    staleTime: 10 * 60 * 1000, // 10 minutes
+  })
+  
+  // Extract tour arrays from data
+  const oneDayTours = oneDayToursData.items || []
+  const multiDayTours = multiDayToursData.items || []
+
   // Flatten tours from all pages
   const tours = toursData?.pages.flatMap(page => page.items || []) || []
   const totalTours = toursData?.pages[0]?.total || 0
+
+  // Global mouse up handler to ensure drag stops when mouse is released anywhere
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      setIsDragging(false)
+      setFeaturedCenterCardIndex(0)
+      setOneDayCenterCardIndex(0)
+      setMultiDayCenterCardIndex(0)
+      
+      // Reset cursors for all containers
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.style.cursor = 'grab'
+      }
+      if (featuredScrollContainerRef.current) {
+        featuredScrollContainerRef.current.style.cursor = 'grab'
+      }
+      if (oneDayScrollContainerRef.current) {
+        oneDayScrollContainerRef.current.style.cursor = 'grab'
+      }
+      if (multiDayScrollContainerRef.current) {
+        multiDayScrollContainerRef.current.style.cursor = 'grab'
+      }
+    }
+
+    const handleGlobalMouseLeave = () => {
+      setIsDragging(false)
+      setFeaturedCenterCardIndex(0)
+      setOneDayCenterCardIndex(0)
+      setMultiDayCenterCardIndex(0)
+      
+      // Reset cursors for all containers
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.style.cursor = 'grab'
+      }
+      if (featuredScrollContainerRef.current) {
+        featuredScrollContainerRef.current.style.cursor = 'grab'
+      }
+      if (oneDayScrollContainerRef.current) {
+        oneDayScrollContainerRef.current.style.cursor = 'grab'
+      }
+      if (multiDayScrollContainerRef.current) {
+        multiDayScrollContainerRef.current.style.cursor = 'grab'
+      }
+    }
+
+    // Add global event listeners
+    document.addEventListener('mouseup', handleGlobalMouseUp)
+    document.addEventListener('mouseleave', handleGlobalMouseLeave)
+    
+    return () => {
+      document.removeEventListener('mouseup', handleGlobalMouseUp)
+      document.removeEventListener('mouseleave', handleGlobalMouseLeave)
+    }
+  }, [])
 
   // Horizontal scroll handler for infinite loading
   const handleScroll = useCallback(() => {
@@ -233,6 +309,138 @@ export default function HomePage() {
   }, [isDragging, startX, scrollLeft, updateFeaturedCenterCard])
 
   const handleFeaturedTouchEnd = useCallback(() => {
+    setIsDragging(false)
+  }, [])
+  
+  // One-day tours center card calculation
+  const updateOneDayCenterCard = useCallback(() => {
+    const container = oneDayScrollContainerRef.current
+    if (!container || oneDayTours.length === 0) return
+
+    const containerWidth = container.clientWidth
+    const cardWidth = 320 // Fixed card width
+    const scrollLeft = container.scrollLeft
+    const centerPosition = scrollLeft + containerWidth / 2
+    const newCenterIndex = Math.round(centerPosition / (cardWidth + 24)) // 24px gap
+    
+    setOneDayCenterCardIndex(Math.max(0, Math.min(newCenterIndex, oneDayTours.length - 1)))
+  }, [oneDayTours.length])
+
+  // One-day tours drag handlers
+  const handleOneDayMouseDown = useCallback((e: React.MouseEvent) => {
+    setIsDragging(true)
+    setStartX(e.pageX - (oneDayScrollContainerRef.current?.offsetLeft || 0))
+    setScrollLeft(oneDayScrollContainerRef.current?.scrollLeft || 0)
+    if (oneDayScrollContainerRef.current) {
+      oneDayScrollContainerRef.current.style.cursor = 'grabbing'
+    }
+  }, [])
+
+  const handleOneDayMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging || !oneDayScrollContainerRef.current) return
+    e.preventDefault()
+    const x = e.pageX - (oneDayScrollContainerRef.current.offsetLeft || 0)
+    const walk = (x - startX) * 2
+    oneDayScrollContainerRef.current.scrollLeft = scrollLeft - walk
+    updateOneDayCenterCard()
+  }, [isDragging, startX, scrollLeft, updateOneDayCenterCard])
+
+  const handleOneDayMouseUp = useCallback(() => {
+    setIsDragging(false)
+    if (oneDayScrollContainerRef.current) {
+      oneDayScrollContainerRef.current.style.cursor = 'grab'
+    }
+  }, [])
+
+  const handleOneDayMouseLeave = useCallback(() => {
+    setIsDragging(false)
+    if (oneDayScrollContainerRef.current) {
+      oneDayScrollContainerRef.current.style.cursor = 'grab'
+    }
+  }, [])
+
+  // One-day tours touch handlers
+  const handleOneDayTouchStart = useCallback((e: React.TouchEvent) => {
+    setIsDragging(true)
+    setStartX(e.touches[0].pageX - (oneDayScrollContainerRef.current?.offsetLeft || 0))
+    setScrollLeft(oneDayScrollContainerRef.current?.scrollLeft || 0)
+  }, [])
+
+  const handleOneDayTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isDragging || !oneDayScrollContainerRef.current) return
+    const x = e.touches[0].pageX - (oneDayScrollContainerRef.current.offsetLeft || 0)
+    const walk = (x - startX) * 1.5
+    oneDayScrollContainerRef.current.scrollLeft = scrollLeft - walk
+    updateOneDayCenterCard()
+  }, [isDragging, startX, scrollLeft, updateOneDayCenterCard])
+
+  const handleOneDayTouchEnd = useCallback(() => {
+    setIsDragging(false)
+  }, [])
+  
+  // Multi-day tours center card calculation
+  const updateMultiDayCenterCard = useCallback(() => {
+    const container = multiDayScrollContainerRef.current
+    if (!container || multiDayTours.length === 0) return
+
+    const containerWidth = container.clientWidth
+    const cardWidth = 320 // Fixed card width
+    const scrollLeft = container.scrollLeft
+    const centerPosition = scrollLeft + containerWidth / 2
+    const newCenterIndex = Math.round(centerPosition / (cardWidth + 24)) // 24px gap
+    
+    setMultiDayCenterCardIndex(Math.max(0, Math.min(newCenterIndex, multiDayTours.length - 1)))
+  }, [multiDayTours.length])
+
+  // Multi-day tours drag handlers
+  const handleMultiDayMouseDown = useCallback((e: React.MouseEvent) => {
+    setIsDragging(true)
+    setStartX(e.pageX - (multiDayScrollContainerRef.current?.offsetLeft || 0))
+    setScrollLeft(multiDayScrollContainerRef.current?.scrollLeft || 0)
+    if (multiDayScrollContainerRef.current) {
+      multiDayScrollContainerRef.current.style.cursor = 'grabbing'
+    }
+  }, [])
+
+  const handleMultiDayMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging || !multiDayScrollContainerRef.current) return
+    e.preventDefault()
+    const x = e.pageX - (multiDayScrollContainerRef.current.offsetLeft || 0)
+    const walk = (x - startX) * 2
+    multiDayScrollContainerRef.current.scrollLeft = scrollLeft - walk
+    updateMultiDayCenterCard()
+  }, [isDragging, startX, scrollLeft, updateMultiDayCenterCard])
+
+  const handleMultiDayMouseUp = useCallback(() => {
+    setIsDragging(false)
+    if (multiDayScrollContainerRef.current) {
+      multiDayScrollContainerRef.current.style.cursor = 'grab'
+    }
+  }, [])
+
+  const handleMultiDayMouseLeave = useCallback(() => {
+    setIsDragging(false)
+    if (multiDayScrollContainerRef.current) {
+      multiDayScrollContainerRef.current.style.cursor = 'grab'
+    }
+  }, [])
+
+  // Multi-day tours touch handlers
+  const handleMultiDayTouchStart = useCallback((e: React.TouchEvent) => {
+    setIsDragging(true)
+    setStartX(e.touches[0].pageX - (multiDayScrollContainerRef.current?.offsetLeft || 0))
+    setScrollLeft(multiDayScrollContainerRef.current?.scrollLeft || 0)
+  }, [])
+
+  const handleMultiDayTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isDragging || !multiDayScrollContainerRef.current) return
+    const x = e.touches[0].pageX - (multiDayScrollContainerRef.current.offsetLeft || 0)
+    const walk = (x - startX) * 1.5
+    multiDayScrollContainerRef.current.scrollLeft = scrollLeft - walk
+    updateMultiDayCenterCard()
+  }, [isDragging, startX, scrollLeft, updateMultiDayCenterCard])
+
+  const handleMultiDayTouchEnd = useCallback(() => {
     setIsDragging(false)
   }, [])
 
@@ -601,7 +809,434 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Featured Tours Section */}
+      {/* One-Day Tours Section */}
+      <section className="py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold mb-2 text-center">Tours de Un Día</h2>
+          <p className="text-center text-muted-foreground mb-8">Explora nuestros mejores tours de un día</p>
+
+          {/* One-Day Tours Carousel */}
+          <div className="relative">
+            {oneDayTours.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No hay tours de un día disponibles en este momento.</p>
+              </div>
+            ) : (
+              <>
+                {/* Carousel Container with Drag Scrolling */}
+                <div 
+                  ref={oneDayScrollContainerRef}
+                  className="overflow-x-auto scrollbar-hide pb-4 cursor-grab select-none"
+                  style={{ 
+                    scrollbarWidth: 'none', 
+                    msOverflowStyle: 'none',
+                    scrollBehavior: isDragging ? 'auto' : 'smooth'
+                  }}
+                  onMouseDown={handleOneDayMouseDown}
+                  onMouseMove={handleOneDayMouseMove}
+                  onMouseUp={handleOneDayMouseUp}
+                  onMouseLeave={handleOneDayMouseLeave}
+                  onTouchStart={handleOneDayTouchStart}
+                  onTouchMove={handleOneDayTouchMove}
+                  onTouchEnd={handleOneDayTouchEnd}
+                  onScroll={updateOneDayCenterCard}
+                >
+                  <div className="flex gap-6 min-w-max px-4 py-8">
+                    {oneDayTours.map((tour, index) => {
+                      const isCenter = index === oneDayCenterCardIndex
+                      const distance = Math.abs(index - oneDayCenterCardIndex)
+                      const scale = isCenter ? 1.1 : Math.max(0.85, 1 - distance * 0.1)
+                      const opacity = isCenter ? 1 : Math.max(0.6, 1 - distance * 0.2)
+                      const zIndex = isCenter ? 20 : Math.max(1, 10 - distance)
+                      
+                      return (
+                        <Link key={`one-day-${tour.id}-${index}`} href={`/tours/${tour.id}`}>
+                          <Card 
+                            className={`
+                              group cursor-pointer transition-all duration-500 ease-out flex-shrink-0
+                              ${isCenter 
+                                ? 'hover:shadow-2xl shadow-xl border-primary/20' 
+                                : 'hover:shadow-lg shadow-md'
+                              }
+                            `}
+                            style={{
+                              width: '320px',
+                              transform: `scale(${scale}) translateZ(0)`,
+                              opacity: opacity,
+                              zIndex: zIndex,
+                              filter: isCenter ? 'none' : 'blur(0.5px)',
+                            }}
+                          >
+                            <div className="relative overflow-hidden rounded-t-lg">
+                              <img
+                                src={(() => {
+                                  if (Array.isArray(tour.images) && tour.images.length > 0) {
+                                    return String(tour.images[0])
+                                  }
+                                  return "/placeholder.svg"
+                                })()}
+                                alt={tour.title}
+                                className={`
+                                  w-full object-cover transition-transform duration-500
+                                  ${isCenter 
+                                    ? 'h-56 group-hover:scale-105' 
+                                    : 'h-48 hover:scale-102'
+                                  }
+                                `}
+                                draggable={false}
+                              />
+                              <Badge className="absolute top-3 left-3 bg-green-500 hover:bg-green-500 text-white">
+                                ⏱️ 1 día
+                              </Badge>
+                              {tour.discount_percentage && (
+                                <Badge className="absolute top-3 right-3 bg-red-500 hover:bg-red-500 text-white">
+                                  -{tour.discount_percentage}%
+                                </Badge>
+                              )}
+                              {isCenter && (
+                                <Badge className="absolute bottom-3 left-3 bg-primary hover:bg-primary text-white animate-pulse">
+                                  🕒 Duración corta
+                                </Badge>
+                              )}
+                            </div>
+
+                            <CardContent className={`${isCenter ? 'p-6' : 'p-4'}`}>
+                              <div className="mb-2">
+                                <Badge variant="secondary" className="text-xs font-medium mb-2">
+                                  {tour.city?.toUpperCase()}
+                                </Badge>
+                              </div>
+
+                              <h3 className={`
+                                font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2
+                                ${isCenter ? 'text-xl' : 'text-lg'}
+                              `}>
+                                {tour.title}
+                              </h3>
+
+                              <p className={`
+                                text-muted-foreground mb-4 line-clamp-2
+                                ${isCenter ? 'text-base' : 'text-sm'}
+                              `}>
+                                {tour.description}
+                              </p>
+
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1">
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  <span className={`font-medium ${isCenter ? 'text-base' : 'text-sm'}`}>
+                                    {tour.rating}
+                                  </span>
+                                  <span className={`text-muted-foreground ${isCenter ? 'text-sm' : 'text-xs'}`}>
+                                    ({tour.review_count?.toLocaleString()})
+                                  </span>
+                                </div>
+
+                                <div className="text-right">
+                                  <div className={`text-muted-foreground ${isCenter ? 'text-sm' : 'text-xs'}`}>
+                                    Desde
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {tour.original_price && tour.original_price > tour.price && (
+                                      <span className={`text-muted-foreground line-through ${
+                                        isCenter ? 'text-sm' : 'text-xs'
+                                      }`}>
+                                        ${tour.original_price.toFixed(2)}
+                                      </span>
+                                    )}
+                                    <span className={`font-bold ${
+                                      isCenter ? 'text-2xl text-primary' : 'text-lg'
+                                    }`}>
+                                      ${tour.price.toFixed(2)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      )
+                    })}
+                    
+                    {/* View All Card */}
+                    <Link href="/tours?max_days=1">
+                      <Card 
+                        className="group cursor-pointer transition-all duration-300 ease-out flex-shrink-0 w-[200px] h-[400px] flex items-center justify-center border-dashed border-2 hover:border-primary hover:bg-primary/5"
+                      >
+                        <CardContent className="text-center p-6">
+                          <div className="mb-4 mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            <ChevronRight className="h-6 w-6 text-primary" />
+                          </div>
+                          <h3 className="font-medium text-lg mb-2 group-hover:text-primary transition-colors">
+                            Ver todos
+                          </h3>
+                          <p className="text-muted-foreground text-sm">
+                            Explorar todos los tours de un día
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Navigation Arrows for One-Day Tours */}
+                <div className="absolute inset-y-0 left-0 flex items-center">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full bg-background/80 backdrop-blur-sm shadow-lg hover:bg-background border-2 ml-2"
+                    onClick={() => {
+                      const container = oneDayScrollContainerRef.current
+                      if (container) {
+                        container.scrollBy({ left: -350, behavior: 'smooth' })
+                      }
+                    }}
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </Button>
+                </div>
+                
+                <div className="absolute inset-y-0 right-0 flex items-center">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full bg-background/80 backdrop-blur-sm shadow-lg hover:bg-background border-2 mr-2"
+                    onClick={() => {
+                      const container = oneDayScrollContainerRef.current
+                      if (container) {
+                        container.scrollBy({ left: 350, behavior: 'smooth' })
+                      }
+                    }}
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </Button>
+                </div>
+
+                {/* One-Day Tours Instructions */}
+                <div className="text-center mt-4">
+                  <p className="text-xs text-muted-foreground">
+                    Tours que puedes completar en un solo día • {oneDayTours.length} disponibles
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+      {/* Multi-Day Tours Section */}
+      <section className="py-16 px-4">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold mb-2 text-center">Tours de Varios Días</h2>
+          <p className="text-center text-muted-foreground mb-8">Experiencias completas para conocer más a fondo</p>
+
+          {/* Multi-Day Tours Carousel */}
+          <div className="relative">
+            {multiDayTours.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No hay tours de varios días disponibles en este momento.</p>
+              </div>
+            ) : (
+              <>
+                {/* Carousel Container with Drag Scrolling */}
+                <div 
+                  ref={multiDayScrollContainerRef}
+                  className="overflow-x-auto scrollbar-hide pb-4 cursor-grab select-none"
+                  style={{ 
+                    scrollbarWidth: 'none', 
+                    msOverflowStyle: 'none',
+                    scrollBehavior: isDragging ? 'auto' : 'smooth'
+                  }}
+                  onMouseDown={handleMultiDayMouseDown}
+                  onMouseMove={handleMultiDayMouseMove}
+                  onMouseUp={handleMultiDayMouseUp}
+                  onMouseLeave={handleMultiDayMouseLeave}
+                  onTouchStart={handleMultiDayTouchStart}
+                  onTouchMove={handleMultiDayTouchMove}
+                  onTouchEnd={handleMultiDayTouchEnd}
+                  onScroll={updateMultiDayCenterCard}
+                >
+                  <div className="flex gap-6 min-w-max px-4 py-8">
+                    {multiDayTours.map((tour, index) => {
+                      const isCenter = index === multiDayCenterCardIndex
+                      const distance = Math.abs(index - multiDayCenterCardIndex)
+                      const scale = isCenter ? 1.1 : Math.max(0.85, 1 - distance * 0.1)
+                      const opacity = isCenter ? 1 : Math.max(0.6, 1 - distance * 0.2)
+                      const zIndex = isCenter ? 20 : Math.max(1, 10 - distance)
+                      
+                      return (
+                        <Link key={`multi-day-${tour.id}-${index}`} href={`/tours/${tour.id}`}>
+                          <Card 
+                            className={`
+                              group cursor-pointer transition-all duration-500 ease-out flex-shrink-0
+                              ${isCenter 
+                                ? 'hover:shadow-2xl shadow-xl border-primary/20' 
+                                : 'hover:shadow-lg shadow-md'
+                              }
+                            `}
+                            style={{
+                              width: '320px',
+                              transform: `scale(${scale}) translateZ(0)`,
+                              opacity: opacity,
+                              zIndex: zIndex,
+                              filter: isCenter ? 'none' : 'blur(0.5px)',
+                            }}
+                          >
+                            <div className="relative overflow-hidden rounded-t-lg">
+                              <img
+                                src={(() => {
+                                  if (Array.isArray(tour.images) && tour.images.length > 0) {
+                                    return String(tour.images[0])
+                                  }
+                                  return "/placeholder.svg"
+                                })()}
+                                alt={tour.title}
+                                className={`
+                                  w-full object-cover transition-transform duration-500
+                                  ${isCenter 
+                                    ? 'h-56 group-hover:scale-105' 
+                                    : 'h-48 hover:scale-102'
+                                  }
+                                `}
+                                draggable={false}
+                              />
+                              <Badge className="absolute top-3 left-3 bg-purple-500 hover:bg-purple-500 text-white">
+                                🗓️ {tour.duration_days || 2}+ días
+                              </Badge>
+                              {tour.discount_percentage && (
+                                <Badge className="absolute top-3 right-3 bg-red-500 hover:bg-red-500 text-white">
+                                  -{tour.discount_percentage}%
+                                </Badge>
+                              )}
+                              {isCenter && (
+                                <Badge className="absolute bottom-3 left-3 bg-primary hover:bg-primary text-white animate-pulse">
+                                  ✨ Experiencia completa
+                                </Badge>
+                              )}
+                            </div>
+
+                            <CardContent className={`${isCenter ? 'p-6' : 'p-4'}`}>
+                              <div className="mb-2">
+                                <Badge variant="secondary" className="text-xs font-medium mb-2">
+                                  {tour.city?.toUpperCase()}
+                                </Badge>
+                              </div>
+
+                              <h3 className={`
+                                font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2
+                                ${isCenter ? 'text-xl' : 'text-lg'}
+                              `}>
+                                {tour.title}
+                              </h3>
+
+                              <p className={`
+                                text-muted-foreground mb-4 line-clamp-2
+                                ${isCenter ? 'text-base' : 'text-sm'}
+                              `}>
+                                {tour.description}
+                              </p>
+
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1">
+                                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                  <span className={`font-medium ${isCenter ? 'text-base' : 'text-sm'}`}>
+                                    {tour.rating}
+                                  </span>
+                                  <span className={`text-muted-foreground ${isCenter ? 'text-sm' : 'text-xs'}`}>
+                                    ({tour.review_count?.toLocaleString()})
+                                  </span>
+                                </div>
+
+                                <div className="text-right">
+                                  <div className={`text-muted-foreground ${isCenter ? 'text-sm' : 'text-xs'}`}>
+                                    Desde
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    {tour.original_price && tour.original_price > tour.price && (
+                                      <span className={`text-muted-foreground line-through ${
+                                        isCenter ? 'text-sm' : 'text-xs'
+                                      }`}>
+                                        ${tour.original_price.toFixed(2)}
+                                      </span>
+                                    )}
+                                    <span className={`font-bold ${
+                                      isCenter ? 'text-2xl text-primary' : 'text-lg'
+                                    }`}>
+                                      ${tour.price.toFixed(2)}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </Link>
+                      )
+                    })}
+                    
+                    {/* View All Card */}
+                    <Link href="/tours?min_days=2">
+                      <Card 
+                        className="group cursor-pointer transition-all duration-300 ease-out flex-shrink-0 w-[200px] h-[400px] flex items-center justify-center border-dashed border-2 hover:border-primary hover:bg-primary/5"
+                      >
+                        <CardContent className="text-center p-6">
+                          <div className="mb-4 mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            <ChevronRight className="h-6 w-6 text-primary" />
+                          </div>
+                          <h3 className="font-medium text-lg mb-2 group-hover:text-primary transition-colors">
+                            Ver todos
+                          </h3>
+                          <p className="text-muted-foreground text-sm">
+                            Explorar todos los tours de varios días
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Navigation Arrows for Multi-Day Tours */}
+                <div className="absolute inset-y-0 left-0 flex items-center">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full bg-background/80 backdrop-blur-sm shadow-lg hover:bg-background border-2 ml-2"
+                    onClick={() => {
+                      const container = multiDayScrollContainerRef.current
+                      if (container) {
+                        container.scrollBy({ left: -350, behavior: 'smooth' })
+                      }
+                    }}
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </Button>
+                </div>
+                
+                <div className="absolute inset-y-0 right-0 flex items-center">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full bg-background/80 backdrop-blur-sm shadow-lg hover:bg-background border-2 mr-2"
+                    onClick={() => {
+                      const container = multiDayScrollContainerRef.current
+                      if (container) {
+                        container.scrollBy({ left: 350, behavior: 'smooth' })
+                      }
+                    }}
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </Button>
+                </div>
+
+                {/* Multi-Day Tours Instructions */}
+                <div className="text-center mt-4">
+                  <p className="text-xs text-muted-foreground">
+                    Tours de experiencias completas de varios días • {multiDayTours.length} disponibles
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
       <section className="py-16 px-4 bg-muted/30">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold mb-8 text-center">Tours Destacados</h2>

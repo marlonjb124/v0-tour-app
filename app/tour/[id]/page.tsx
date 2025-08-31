@@ -9,7 +9,7 @@ import Link from "next/link"
 import TourCalendar from "@/components/tour-calendar"
 import { useQuery } from "@tanstack/react-query"
 import { TourService, Tour } from "@/services/tour-service"
-import { toast } from "react-hot-toast"
+import { toast } from "sonner"
 import { useState, use } from "react"
 
 interface TourDetailPageProps {
