@@ -1,0 +1,26 @@
+{
+    "mcp": {
+
+        "inputs": [],
+        "servers": {
+            // "mcp-server-time": {
+            //     "command": "python",
+            //     "args": [
+            //         "-m",
+            //         "mcp_server_time",
+            //         "--local-timezone=America/Los_Angeles"
+            //     ],
+            //     "env": {}
+            // },
+            "supabase": {
+                "command": "npx",
+                "args": [
+                  "-y",
+                  "@supabase/mcp-server-supabase@latest",
+                  "--project-ref=pmdeyjcxsogqtofusgri",
+                  "--access-token=sbp_97253cc910a3461d62d2881bd643569db8f1f916"
+                ]     }
+        }
+
+    }
+}
