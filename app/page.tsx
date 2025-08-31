@@ -173,7 +173,7 @@ export default function HomePage() {
     if (!container || tours.length === 0) return
 
     const containerWidth = container.clientWidth
-    const cardWidth = 320 // Fixed card width
+    const cardWidth = 300 // Fixed card width
     const scrollLeft = container.scrollLeft
     const centerPosition = scrollLeft + containerWidth / 2
     const newCenterIndex = Math.round(centerPosition / (cardWidth + 24)) // 24px gap
@@ -252,7 +252,7 @@ export default function HomePage() {
     if (!container || featuredTours.length === 0) return
 
     const containerWidth = container.clientWidth
-    const cardWidth = 320 // Fixed card width
+    const cardWidth = 300 // Fixed card width
     const scrollLeft = container.scrollLeft
     const centerPosition = scrollLeft + containerWidth / 2
     const newCenterIndex = Math.round(centerPosition / (cardWidth + 24)) // 24px gap
@@ -318,7 +318,7 @@ export default function HomePage() {
     if (!container || oneDayTours.length === 0) return
 
     const containerWidth = container.clientWidth
-    const cardWidth = 320 // Fixed card width
+    const cardWidth = 300 // Fixed card width
     const scrollLeft = container.scrollLeft
     const centerPosition = scrollLeft + containerWidth / 2
     const newCenterIndex = Math.round(centerPosition / (cardWidth + 24)) // 24px gap
@@ -384,7 +384,7 @@ export default function HomePage() {
     if (!container || multiDayTours.length === 0) return
 
     const containerWidth = container.clientWidth
-    const cardWidth = 320 // Fixed card width
+    const cardWidth = 300 // Fixed card width
     const scrollLeft = container.scrollLeft
     const centerPosition = scrollLeft + containerWidth / 2
     const newCenterIndex = Math.round(centerPosition / (cardWidth + 24)) // 24px gap
@@ -630,21 +630,22 @@ export default function HomePage() {
                         <Link key={`${tour.id}-${index}`} href={`/tours/${tour.id}`}>
                           <Card 
                             className={`
-                              group cursor-pointer transition-all duration-500 ease-out flex-shrink-0
+                              group cursor-pointer transition-all duration-500 ease-out flex-shrink-0 flex flex-col overflow-hidden p-0
                               ${isCenter 
                                 ? 'hover:shadow-2xl shadow-xl border-primary/20' 
                                 : 'hover:shadow-lg shadow-md'
                               }
                             `}
                             style={{
-                              width: '320px',
+                              width: '300px',
+                              height: '380px',
                               transform: `scale(${scale}) translateZ(0)`,
                               opacity: opacity,
                               zIndex: zIndex,
                               filter: isCenter ? 'none' : 'blur(0.5px)',
                             }}
                           >
-                            <div className="relative overflow-hidden rounded-t-lg">
+                            <div className="relative overflow-hidden" style={{ height: '170px' }}>
                               <img
                                 src={(() => {
                                   if (Array.isArray(tour.images) && tour.images.length > 0) {
@@ -653,13 +654,7 @@ export default function HomePage() {
                                   return "/placeholder.svg"
                                 })()}
                                 alt={tour.title}
-                                className={`
-                                  w-full object-cover transition-transform duration-500
-                                  ${isCenter 
-                                    ? 'h-56 group-hover:scale-105' 
-                                    : 'h-48 hover:scale-102'
-                                  }
-                                `}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                 draggable={false}
                               />
                               {tour.discount_percentage && (
@@ -674,53 +669,45 @@ export default function HomePage() {
                               )}
                             </div>
 
-                            <CardContent className={`${isCenter ? 'p-6' : 'p-4'}`}>
-                              <div className="mb-2">
-                                <Badge variant="secondary" className="text-xs font-medium mb-2">
-                                  {tour.city?.toUpperCase()}
-                                </Badge>
+                            <CardContent className="flex-1 flex flex-col justify-between p-2">
+                              <div>
+                                <div className="mb-1">
+                                  <Badge variant="secondary" className="text-xs font-medium mb-1">
+                                    {tour.city?.toUpperCase()}
+                                  </Badge>
+                                </div>
+
+                                <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors line-clamp-2 text-base">
+                                  {tour.title}
+                                </h3>
+
+                                <p className="text-muted-foreground mb-1 line-clamp-2 text-sm">
+                                  {tour.description}
+                                </p>
                               </div>
 
-                              <h3 className={`
-                                font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2
-                                ${isCenter ? 'text-xl' : 'text-lg'}
-                              `}>
-                                {tour.title}
-                              </h3>
-
-                              <p className={`
-                                text-muted-foreground mb-4 line-clamp-2
-                                ${isCenter ? 'text-base' : 'text-sm'}
-                              `}>
-                                {tour.description}
-                              </p>
-
-                              <div className="flex items-center justify-between">
+                              <div className="flex items-center justify-between mt-auto">
                                 <div className="flex items-center gap-1">
                                   <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                  <span className={`font-medium ${isCenter ? 'text-base' : 'text-sm'}`}>
+                                  <span className="font-medium text-sm">
                                     {tour.rating}
                                   </span>
-                                  <span className={`text-muted-foreground ${isCenter ? 'text-sm' : 'text-xs'}`}>
+                                  <span className="text-muted-foreground text-xs">
                                     ({tour.review_count?.toLocaleString()})
                                   </span>
                                 </div>
 
                                 <div className="text-right">
-                                  <div className={`text-muted-foreground ${isCenter ? 'text-sm' : 'text-xs'}`}>
+                                  <div className="text-muted-foreground text-xs">
                                     Desde
                                   </div>
                                   <div className="flex items-center gap-2">
                                     {tour.original_price && tour.original_price > tour.price && (
-                                      <span className={`text-muted-foreground line-through ${
-                                        isCenter ? 'text-sm' : 'text-xs'
-                                      }`}>
+                                      <span className="text-muted-foreground line-through text-xs">
                                         ${tour.original_price.toFixed(2)}
                                       </span>
                                     )}
-                                    <span className={`font-bold ${
-                                      isCenter ? 'text-2xl text-primary' : 'text-lg'
-                                    }`}>
+                                    <span className="font-bold text-lg text-primary">
                                       ${tour.price.toFixed(2)}
                                     </span>
                                   </div>
@@ -853,21 +840,22 @@ export default function HomePage() {
                         <Link key={`one-day-${tour.id}-${index}`} href={`/tours/${tour.id}`}>
                           <Card 
                             className={`
-                              group cursor-pointer transition-all duration-500 ease-out flex-shrink-0
+                              group cursor-pointer transition-all duration-500 ease-out flex-shrink-0 flex flex-col overflow-hidden p-0
                               ${isCenter 
                                 ? 'hover:shadow-2xl shadow-xl border-primary/20' 
                                 : 'hover:shadow-lg shadow-md'
                               }
                             `}
                             style={{
-                              width: '320px',
+                              width: '300px',
+                              height: '380px',
                               transform: `scale(${scale}) translateZ(0)`,
                               opacity: opacity,
                               zIndex: zIndex,
                               filter: isCenter ? 'none' : 'blur(0.5px)',
                             }}
                           >
-                            <div className="relative overflow-hidden rounded-t-lg">
+                            <div className="relative overflow-hidden" style={{ height: '170px' }}>
                               <img
                                 src={(() => {
                                   if (Array.isArray(tour.images) && tour.images.length > 0) {
@@ -876,13 +864,7 @@ export default function HomePage() {
                                   return "/placeholder.svg"
                                 })()}
                                 alt={tour.title}
-                                className={`
-                                  w-full object-cover transition-transform duration-500
-                                  ${isCenter 
-                                    ? 'h-56 group-hover:scale-105' 
-                                    : 'h-48 hover:scale-102'
-                                  }
-                                `}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                 draggable={false}
                               />
                               <Badge className="absolute top-3 left-3 bg-green-500 hover:bg-green-500 text-white">
@@ -900,53 +882,45 @@ export default function HomePage() {
                               )}
                             </div>
 
-                            <CardContent className={`${isCenter ? 'p-6' : 'p-4'}`}>
-                              <div className="mb-2">
-                                <Badge variant="secondary" className="text-xs font-medium mb-2">
-                                  {tour.city?.toUpperCase()}
-                                </Badge>
+                            <CardContent className="flex-1 flex flex-col justify-between p-2">
+                              <div>
+                                <div className="mb-1">
+                                  <Badge variant="secondary" className="text-xs font-medium mb-1">
+                                    {tour.city?.toUpperCase()}
+                                  </Badge>
+                                </div>
+
+                                <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors line-clamp-2 text-base">
+                                  {tour.title}
+                                </h3>
+
+                                <p className="text-muted-foreground mb-1 line-clamp-2 text-sm">
+                                  {tour.description}
+                                </p>
                               </div>
 
-                              <h3 className={`
-                                font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2
-                                ${isCenter ? 'text-xl' : 'text-lg'}
-                              `}>
-                                {tour.title}
-                              </h3>
-
-                              <p className={`
-                                text-muted-foreground mb-4 line-clamp-2
-                                ${isCenter ? 'text-base' : 'text-sm'}
-                              `}>
-                                {tour.description}
-                              </p>
-
-                              <div className="flex items-center justify-between">
+                              <div className="flex items-center justify-between mt-auto">
                                 <div className="flex items-center gap-1">
                                   <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                  <span className={`font-medium ${isCenter ? 'text-base' : 'text-sm'}`}>
+                                  <span className="font-medium text-sm">
                                     {tour.rating}
                                   </span>
-                                  <span className={`text-muted-foreground ${isCenter ? 'text-sm' : 'text-xs'}`}>
+                                  <span className="text-muted-foreground text-xs">
                                     ({tour.review_count?.toLocaleString()})
                                   </span>
                                 </div>
 
                                 <div className="text-right">
-                                  <div className={`text-muted-foreground ${isCenter ? 'text-sm' : 'text-xs'}`}>
+                                  <div className="text-muted-foreground text-xs">
                                     Desde
                                   </div>
                                   <div className="flex items-center gap-2">
                                     {tour.original_price && tour.original_price > tour.price && (
-                                      <span className={`text-muted-foreground line-through ${
-                                        isCenter ? 'text-sm' : 'text-xs'
-                                      }`}>
+                                      <span className="text-muted-foreground line-through text-xs">
                                         ${tour.original_price.toFixed(2)}
                                       </span>
                                     )}
-                                    <span className={`font-bold ${
-                                      isCenter ? 'text-2xl text-primary' : 'text-lg'
-                                    }`}>
+                                    <span className="font-bold text-lg text-primary">
                                       ${tour.price.toFixed(2)}
                                     </span>
                                   </div>
@@ -1067,21 +1041,22 @@ export default function HomePage() {
                         <Link key={`multi-day-${tour.id}-${index}`} href={`/tours/${tour.id}`}>
                           <Card 
                             className={`
-                              group cursor-pointer transition-all duration-500 ease-out flex-shrink-0
+                              group cursor-pointer transition-all duration-500 ease-out flex-shrink-0 flex flex-col overflow-hidden p-0
                               ${isCenter 
                                 ? 'hover:shadow-2xl shadow-xl border-primary/20' 
                                 : 'hover:shadow-lg shadow-md'
                               }
                             `}
                             style={{
-                              width: '320px',
+                              width: '300px',
+                              height: '380px',
                               transform: `scale(${scale}) translateZ(0)`,
                               opacity: opacity,
                               zIndex: zIndex,
                               filter: isCenter ? 'none' : 'blur(0.5px)',
                             }}
                           >
-                            <div className="relative overflow-hidden rounded-t-lg">
+                            <div className="relative overflow-hidden" style={{ height: '170px' }}>
                               <img
                                 src={(() => {
                                   if (Array.isArray(tour.images) && tour.images.length > 0) {
@@ -1090,13 +1065,7 @@ export default function HomePage() {
                                   return "/placeholder.svg"
                                 })()}
                                 alt={tour.title}
-                                className={`
-                                  w-full object-cover transition-transform duration-500
-                                  ${isCenter 
-                                    ? 'h-56 group-hover:scale-105' 
-                                    : 'h-48 hover:scale-102'
-                                  }
-                                `}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                 draggable={false}
                               />
                               <Badge className="absolute top-3 left-3 bg-purple-500 hover:bg-purple-500 text-white">
@@ -1114,53 +1083,45 @@ export default function HomePage() {
                               )}
                             </div>
 
-                            <CardContent className={`${isCenter ? 'p-6' : 'p-4'}`}>
-                              <div className="mb-2">
-                                <Badge variant="secondary" className="text-xs font-medium mb-2">
-                                  {tour.city?.toUpperCase()}
-                                </Badge>
+                            <CardContent className="flex-1 flex flex-col justify-between p-2">
+                              <div>
+                                <div className="mb-1">
+                                  <Badge variant="secondary" className="text-xs font-medium mb-1">
+                                    {tour.city?.toUpperCase()}
+                                  </Badge>
+                                </div>
+
+                                <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors line-clamp-2 text-base">
+                                  {tour.title}
+                                </h3>
+
+                                <p className="text-muted-foreground mb-1 line-clamp-2 text-sm">
+                                  {tour.description}
+                                </p>
                               </div>
 
-                              <h3 className={`
-                                font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2
-                                ${isCenter ? 'text-xl' : 'text-lg'}
-                              `}>
-                                {tour.title}
-                              </h3>
-
-                              <p className={`
-                                text-muted-foreground mb-4 line-clamp-2
-                                ${isCenter ? 'text-base' : 'text-sm'}
-                              `}>
-                                {tour.description}
-                              </p>
-
-                              <div className="flex items-center justify-between">
+                              <div className="flex items-center justify-between mt-auto">
                                 <div className="flex items-center gap-1">
                                   <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                  <span className={`font-medium ${isCenter ? 'text-base' : 'text-sm'}`}>
+                                  <span className="font-medium text-sm">
                                     {tour.rating}
                                   </span>
-                                  <span className={`text-muted-foreground ${isCenter ? 'text-sm' : 'text-xs'}`}>
+                                  <span className="text-muted-foreground text-xs">
                                     ({tour.review_count?.toLocaleString()})
                                   </span>
                                 </div>
 
                                 <div className="text-right">
-                                  <div className={`text-muted-foreground ${isCenter ? 'text-sm' : 'text-xs'}`}>
+                                  <div className="text-muted-foreground text-xs">
                                     Desde
                                   </div>
                                   <div className="flex items-center gap-2">
                                     {tour.original_price && tour.original_price > tour.price && (
-                                      <span className={`text-muted-foreground line-through ${
-                                        isCenter ? 'text-sm' : 'text-xs'
-                                      }`}>
+                                      <span className="text-muted-foreground line-through text-xs">
                                         ${tour.original_price.toFixed(2)}
                                       </span>
                                     )}
-                                    <span className={`font-bold ${
-                                      isCenter ? 'text-2xl text-primary' : 'text-lg'
-                                    }`}>
+                                    <span className="font-bold text-lg text-primary">
                                       ${tour.price.toFixed(2)}
                                     </span>
                                   </div>
@@ -1280,21 +1241,22 @@ export default function HomePage() {
                         <Link key={`featured-${tour.id}-${index}`} href={`/tours/${tour.id}`}>
                           <Card 
                             className={`
-                              group cursor-pointer transition-all duration-500 ease-out flex-shrink-0
+                              group cursor-pointer transition-all duration-500 ease-out flex-shrink-0 flex flex-col overflow-hidden p-0
                               ${isCenter 
                                 ? 'hover:shadow-2xl shadow-xl border-primary/20' 
                                 : 'hover:shadow-lg shadow-md'
                               }
                             `}
                             style={{
-                              width: '320px',
+                              width: '300px',
+                              height: '380px',
                               transform: `scale(${scale}) translateZ(0)`,
                               opacity: opacity,
                               zIndex: zIndex,
                               filter: isCenter ? 'none' : 'blur(0.5px)',
                             }}
                           >
-                            <div className="relative overflow-hidden rounded-t-lg">
+                            <div className="relative overflow-hidden" style={{ height: '170px' }}>
                               <img
                                 src={(() => {
                                   if (Array.isArray(tour.images) && tour.images.length > 0) {
@@ -1303,13 +1265,7 @@ export default function HomePage() {
                                   return "/placeholder.svg"
                                 })()}
                                 alt={tour.title}
-                                className={`
-                                  w-full object-cover transition-transform duration-500
-                                  ${isCenter 
-                                    ? 'h-56 group-hover:scale-105' 
-                                    : 'h-48 hover:scale-102'
-                                  }
-                                `}
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                 draggable={false}
                               />
                               <Badge className="absolute top-3 left-3 bg-blue-500 hover:bg-blue-500 text-white">
@@ -1327,53 +1283,45 @@ export default function HomePage() {
                               )}
                             </div>
 
-                            <CardContent className={`${isCenter ? 'p-6' : 'p-4'}`}>
-                              <div className="mb-2">
-                                <Badge variant="secondary" className="text-xs font-medium mb-2">
-                                  {tour.city?.toUpperCase()}
-                                </Badge>
+                            <CardContent className="flex-1 flex flex-col justify-between p-2">
+                              <div>
+                                <div className="mb-1">
+                                  <Badge variant="secondary" className="text-xs font-medium mb-1">
+                                    {tour.city?.toUpperCase()}
+                                  </Badge>
+                                </div>
+
+                                <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors line-clamp-2 text-base">
+                                  {tour.title}
+                                </h3>
+
+                                <p className="text-muted-foreground mb-1 line-clamp-2 text-sm">
+                                  {tour.description}
+                                </p>
                               </div>
 
-                              <h3 className={`
-                                font-semibold mb-2 group-hover:text-primary transition-colors line-clamp-2
-                                ${isCenter ? 'text-xl' : 'text-lg'}
-                              `}>
-                                {tour.title}
-                              </h3>
-
-                              <p className={`
-                                text-muted-foreground mb-4 line-clamp-2
-                                ${isCenter ? 'text-base' : 'text-sm'}
-                              `}>
-                                {tour.description}
-                              </p>
-
-                              <div className="flex items-center justify-between">
+                              <div className="flex items-center justify-between mt-auto">
                                 <div className="flex items-center gap-1">
                                   <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                  <span className={`font-medium ${isCenter ? 'text-base' : 'text-sm'}`}>
+                                  <span className="font-medium text-sm">
                                     {tour.rating}
                                   </span>
-                                  <span className={`text-muted-foreground ${isCenter ? 'text-sm' : 'text-xs'}`}>
+                                  <span className="text-muted-foreground text-xs">
                                     ({tour.review_count?.toLocaleString()})
                                   </span>
                                 </div>
 
                                 <div className="text-right">
-                                  <div className={`text-muted-foreground ${isCenter ? 'text-sm' : 'text-xs'}`}>
+                                  <div className="text-muted-foreground text-xs">
                                     Desde
                                   </div>
                                   <div className="flex items-center gap-2">
                                     {tour.original_price && tour.original_price > tour.price && (
-                                      <span className={`text-muted-foreground line-through ${
-                                        isCenter ? 'text-sm' : 'text-xs'
-                                      }`}>
+                                      <span className="text-muted-foreground line-through text-xs">
                                         ${tour.original_price.toFixed(2)}
                                       </span>
                                     )}
-                                    <span className={`font-bold ${
-                                      isCenter ? 'text-2xl text-primary' : 'text-lg'
-                                    }`}>
+                                    <span className="font-bold text-lg text-primary">
                                       ${tour.price.toFixed(2)}
                                     </span>
                                   </div>
