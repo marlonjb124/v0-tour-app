@@ -32,12 +32,7 @@ export default function LoginPage() {
   
   const { login, isAuthenticated } = useAuth()
   const router = useRouter()
-
-  // Redirect if already authenticated
-  if (isAuthenticated) {
-    router.push('/')
-    return null
-  }
+  
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {}
@@ -69,7 +64,7 @@ export default function LoginPage() {
     
     try {
       await login(formData)
-      router.push('/') // Redirect to homepage after successful login
+      router.push('/admin') // Redirect to admin dashboard after successful login
     } catch (error: any) {
       console.error('Login error:', error)
       // Error is already handled by the auth context with toast

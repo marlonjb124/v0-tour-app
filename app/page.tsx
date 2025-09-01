@@ -10,6 +10,64 @@ import Link from "next/link"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
 import { TourService, Tour } from "@/services/tour-service"
 import { toast } from "sonner"
+import useEmblaCarousel from 'embla-carousel-react'
+import Autoplay from 'embla-carousel-autoplay'
+
+const FeatureCardsCarousel = () => {
+  const [emblaRef] = useEmblaCarousel({
+    loop: true,
+    slidesToScroll: 1,
+    breakpoints: {
+      '(min-width: 768px)': {
+        slidesToScroll: 1,
+      },
+    },
+  }, [Autoplay({ delay: 3000, stopOnInteraction: false })])
+
+  const featureCards = [
+    {
+      id: 1,
+      title: "Flexibilidad en todo momento",
+      description: "Opciones flexibles de cancelación en todos los establecimientos",
+      bgColor: "bg-secondary/10",
+      iconColor: "bg-secondary",
+    },
+    {
+      id: 2,
+      title: "Reserva con confianza",
+      description: "Reserva desde tu móvil con facilidad y sáltate la cola",
+      bgColor: "bg-primary/10",
+      iconColor: "bg-primary",
+    },
+    {
+      id: 3,
+      title: "Descubre la cultura a tu manera",
+      description: "Las mejores experiencias en sitios arqueológicos y atracciones de todo el Perú",
+      bgColor: "bg-accent/10",
+      iconColor: "bg-accent",
+    },
+  ]
+
+  return (
+    <div className="overflow-hidden" ref={emblaRef}>
+      <div className="flex h-48">
+        {featureCards.map((card) => (
+          <div key={card.id} className="flex-[0_0_100%] md:flex-[0_0_33.33%] px-2">
+            <div className="flex items-start gap-4 p-6 bg-card rounded-lg h-full">
+              <div className={`w-12 h-12 ${card.bgColor} rounded-full flex items-center justify-center flex-shrink-0`}>
+                <div className={`w-6 h-6 ${card.iconColor} rounded-full`} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-2">{card.title}</h3>
+                <p className="text-muted-foreground">{card.description}</p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export default function HomePage() {
   const [selectedCity, setSelectedCity] = useState<string>("")
@@ -509,41 +567,12 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Feature Cards */}
+      {/* Feature Cards Carousel */}
       <section className="py-16 px-4 bg-muted/30">
         <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="flex items-start gap-4 p-6 bg-card rounded-lg">
-              <div className="w-12 h-12 bg-secondary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <div className="w-6 h-6 bg-secondary rounded-full" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-2">Flexibilidad en todo momento</h3>
-                <p className="text-muted-foreground">Opciones flexibles de cancelación en todos los establecimientos</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4 p-6 bg-card rounded-lg">
-              <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <div className="w-6 h-6 bg-primary rounded-full" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-2">Reserva con confianza</h3>
-                <p className="text-muted-foreground">Reserva desde tu móvil con facilidad y sáltate la cola</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4 p-6 bg-card rounded-lg">
-              <div className="w-12 h-12 bg-accent/10 rounded-full flex items-center justify-center flex-shrink-0">
-                <div className="w-6 h-6 bg-accent rounded-full" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-lg mb-2">Descubre la cultura a tu manera</h3>
-                <p className="text-muted-foreground">
-                  Las mejores experiencias en sitios arqueológicos y atracciones de todo el Perú
-                </p>
-              </div>
-            </div>
+          <div className="relative">
+            {/* Embla Carousel */}
+            <FeatureCardsCarousel />
           </div>
         </div>
       </section>

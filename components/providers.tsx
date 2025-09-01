@@ -1,7 +1,6 @@
 'use client'
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { AuthProvider } from '@/contexts/auth-context'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { Toaster } from 'sonner'
 import { useState } from 'react'
@@ -47,15 +46,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ErrorBoundary onError={handleGlobalError}>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          {children}
-          <Toaster
-            position="top-right"
-            richColors
-            expand
-            closeButton
-          />
-        </AuthProvider>
+        {children}
+        <Toaster
+          position="top-right"
+          richColors
+          expand
+          closeButton
+        />
       </QueryClientProvider>
     </ErrorBoundary>
   )

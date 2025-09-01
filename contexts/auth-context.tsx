@@ -4,7 +4,7 @@ import React, { createContext, useContext, useEffect, useState, ReactNode } from
 import { createClient } from '@/lib/supabase'
 import { AuthService, LoginRequest, RegisterRequest } from '@/services/auth-service'
 import type { User } from '@/lib/types'
-import type { User as SupabaseUser, Session } from '@supabase/supabase-js'
+import type { User as SupabaseUser, Session, AuthChangeEvent } from '@supabase/supabase-js'
 import { toast } from 'sonner'
 
 interface NavigationItem {
@@ -34,7 +34,7 @@ interface UserMenuProps {
   onLogout: () => Promise<void>
 }
 
-interface AuthError {
+interface AuthContextError {
   type: 'profile_load' | 'database' | 'permission' | 'unknown'
   message: string
   code?: string
@@ -48,7 +48,7 @@ interface AuthContextType {
   isAuthenticated: boolean
   isAdmin: boolean
   isLoading: boolean
-  error: AuthError | null
+  error: AuthContextError | null
   retryCount: number
   login: (credentials: LoginRequest) => Promise<void>
   register: (userData: RegisterRequest) => Promise<void>
@@ -68,117 +68,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null)
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null)
   const [session, setSession] = useState<Session | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<AuthError | null>(null)
+  const [isLoading, setIsLoading] = useState(true) // Start true, set to false after initial check
+  const [error, setError] = useState<AuthContextError | null>(null)
   const [retryCount, setRetryCount] = useState(0)
   const supabase = createClient()
 
-  // Add timeout to prevent infinite loading
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (isLoading) {
-        console.warn('Authentication timeout - setting loading to false')
-        setError({
-          type: 'unknown',
-          message: 'Authentication timeout. Please refresh the page.',
-          retryable: true
-        })
-        setIsLoading(false)
-      }
-    }, 10000) // 10 second timeout
-
-    return () => clearTimeout(timeout)
-  }, [isLoading])
-
-  // Initialize auth state on mount and listen for auth changes
-  useEffect(() => {
-    console.log('Auth context initializing...')
-    
-    // Check environment variables
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    
-    console.log('Environment check:', {
-      hasUrl: !!supabaseUrl,
-      hasAnonKey: !!supabaseAnonKey,
-      url: supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : 'missing'
-    })
-    
-    if (!supabaseUrl || !supabaseAnonKey) {
-      console.error('Missing Supabase environment variables')
-      setError({
-        type: 'unknown',
-        message: 'Missing Supabase configuration. Please check environment variables.',
-        retryable: false
-      })
-      setIsLoading(false)
-      return
-    }
-    
-    // Get initial authenticated user using secure method
-    console.log('Calling supabase.auth.getUser()...')
-    supabase.auth.getUser().then(({ data: { user }, error }) => {
-      console.log('Initial auth check result:', { user: !!user, error })
-      
-      if (error) {
-        console.error('Auth error:', error)
-        setError({
-          type: 'database',
-          message: error.message || 'Authentication failed',
-          retryable: true
-        })
-        setIsLoading(false)
-        return
-      }
-      
-      if (user) {
-        console.log('User found, loading profile...')
-        setSupabaseUser(user)
-        // Get session after confirming user is authenticated
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          setSession(session)
-        })
-        loadUserProfile(user.id)
-      } else {
-        console.log('No authenticated user found')
-        setSupabaseUser(null)
-        setSession(null)
-        setIsLoading(false)
-      }
-    }).catch((error) => {
-      console.error('Unexpected error in auth initialization:', error)
-      setError({
-        type: 'unknown',
-        message: 'Failed to initialize authentication',
-        retryable: true
-      })
-      setIsLoading(false)
-    })
-
-    // Listen for auth changes - this is safe for state changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session)
-      setSupabaseUser(session?.user ?? null)
-      
-      if (session?.user) {
-        await loadUserProfile(session.user.id)
-      } else {
-        setUser(null)
-        setIsLoading(false)
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  // Removed automatic profile creation - profiles should be created during registration process
-
-  const loadUserProfile = async (userId: string, retryAttempt: number = 0): Promise<void> => {
+  const loadUserProfile = async (userId: string): Promise<void> => {
+    setIsLoading(true)
     try {
-      setError(null)
-      
       const { data: userProfile, error } = await supabase
         .from('users')
         .select('*')
@@ -186,68 +83,61 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .single()
 
       if (error) {
-        console.log('Database query error:', error)
-        
-        // Handle profile not found error (PGRST116)
         if (error.code === 'PGRST116') {
-          console.log('User profile not found - user needs to complete registration or admin setup')
-          
-          // Don't try to create profile automatically - this should be done during registration
-          // Just set user to null and let the app handle the missing profile state
-          setUser(null)
-          setError(null) // No error - this is expected for users without profiles
-          setIsLoading(false)
-          return
+          setUser(null) // Profile not found, expected for new users
+        } else {
+          throw error // Re-throw other errors
         }
-        
-        // Handle other database errors
-        const isRetryable = retryAttempt < 3 && (
-          error.message?.includes('connection') ||
-          error.message?.includes('timeout') ||
-          error.code === 'PGRST301' // JWT expired
-        )
-        
-        if (isRetryable) {
-          console.log(`Retrying profile load (attempt ${retryAttempt + 1}/3)...`)
-          setTimeout(() => {
-            loadUserProfile(userId, retryAttempt + 1)
-          }, Math.pow(2, retryAttempt) * 1000) // Exponential backoff
-          return
-        }
-        
-        setError({
-          type: 'database',
-          message: error.message || 'Database connection error',
-          code: error.code,
-          retryable: true
-        })
-        setIsLoading(false)
-        return
-        
-      } else if (userProfile) {
-        console.log('Successfully loaded user profile:', userProfile)
+      } else {
         setUser(userProfile)
-        setError(null)
       }
     } catch (error: any) {
-      console.error('Unexpected error loading user profile:', error)
-      setError({
-        type: 'unknown',
-        message: error.message || 'Unexpected error occurred',
-        retryable: true
-      })
+      console.error('Error loading user profile:', error)
+      setError({ type: 'profile_load', message: 'Failed to load user profile.', retryable: true })
     } finally {
       setIsLoading(false)
     }
   }
 
+  useEffect(() => {
+    const fetchSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      setSupabaseUser(session?.user ?? null);
+      if (session?.user) {
+        await loadUserProfile(session.user.id);
+      } else {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+      setSession(session);
+      setSupabaseUser(session?.user ?? null);
+      if (event === 'SIGNED_IN' && session?.user) {
+        await loadUserProfile(session.user.id);
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setIsLoading(false);
+      } else if (!session) {
+        // Any other event with no session: ensure loading is cleared
+        setIsLoading(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+
   const login = async (credentials: LoginRequest) => {
+    setIsLoading(true)
     try {
-      setIsLoading(true)
-      const response = await AuthService.login(credentials)
-      setUser(response.profile)
-      setSupabaseUser(response.user)
-      setSession(response.session)
+      await AuthService.login(credentials)
+      // onAuthStateChange will handle setting the user and profile
       toast.success('¡Bienvenido! Has iniciado sesión correctamente.')
     } catch (error: any) {
       const message = error.message || 'Error al iniciar sesión'
@@ -259,12 +149,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }
 
   const register = async (userData: RegisterRequest) => {
+    setIsLoading(true)
     try {
-      setIsLoading(true)
-      const response = await AuthService.register(userData)
-      setUser(response.profile)
-      setSupabaseUser(response.user)
-      setSession(response.session)
+      await AuthService.register(userData)
+      // onAuthStateChange will handle setting the user and profile
       toast.success('¡Registro exitoso! Bienvenido.')
     } catch (error: any) {
       const message = error.message || 'Error al registrarse'
@@ -276,56 +164,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }
 
   const logout = async () => {
-    try {
-      await AuthService.logout()
-      setUser(null)
-      setSupabaseUser(null)
-      setSession(null)
-      toast.success('Has cerrado sesión correctamente.')
-    } catch (error) {
-      console.error('Logout error:', error)
-      // Still clear user state even if API call fails
-      setUser(null)
-      setSupabaseUser(null)
-      setSession(null)
-    }
+    await AuthService.logout()
+    // onAuthStateChange will handle setting user to null
+    toast.success('Has cerrado sesión correctamente.')
   }
 
   const refreshUser = async () => {
-    try {
-      if (supabaseUser) {
-        setIsLoading(true)
-        await loadUserProfile(supabaseUser.id)
-      }
-    } catch (error) {
-      console.error('Failed to refresh user:', error)
-      setError({
-        type: 'profile_load',
-        message: 'Failed to refresh user profile',
-        retryable: true
-      })
-    }
+    if (supabaseUser) await loadUserProfile(supabaseUser.id)
   }
 
   const retryAuthentication = async () => {
-    if (supabaseUser && retryCount < 3) {
-      setRetryCount(prev => prev + 1)
-      setIsLoading(true)
-      setError(null)
-      await loadUserProfile(supabaseUser.id)
-    }
+    if (supabaseUser) await loadUserProfile(supabaseUser.id)
   }
 
-  const clearError = () => {
-    setError(null)
-    setRetryCount(0)
-  }
+  const clearError = () => setError(null)
 
   const contextValue: AuthContextType = {
     user,
     supabaseUser,
     session,
-    isAuthenticated: !!session, // User is authenticated if they have a session, even without a profile
+    isAuthenticated: !!session,
     isAdmin: user?.role === 'admin',
     isLoading,
     error,
@@ -353,7 +211,6 @@ export const useAuth = () => {
   return context
 }
 
-// Enhanced HOC for protecting routes with better type safety
 export const withAuth = <P extends Record<string, any>>(
   Component: React.ComponentType<P>
 ) => {
@@ -394,7 +251,6 @@ export const withAuth = <P extends Record<string, any>>(
       return null
     }
 
-    // If user is authenticated but doesn't have a profile, redirect to registration completion
     if (isAuthenticated && !user) {
       if (typeof window !== 'undefined') {
         window.location.href = '/auth/register'
@@ -406,7 +262,6 @@ export const withAuth = <P extends Record<string, any>>(
   }
 }
 
-// Enhanced HOC for protecting admin routes with better type safety
 export const withAdminAuth = <P extends Record<string, any>>(
   Component: React.ComponentType<P>
 ) => {
@@ -424,7 +279,6 @@ export const withAdminAuth = <P extends Record<string, any>>(
       )
     }
 
-    // Show error state with retry option
     if (error) {
       return (
         <div className="min-h-screen flex items-center justify-center">
@@ -471,7 +325,6 @@ export const withAdminAuth = <P extends Record<string, any>>(
       return null
     }
 
-    // If user is authenticated but doesn't have a profile, redirect to admin setup
     if (isAuthenticated && !user) {
       if (typeof window !== 'undefined') {
         window.location.href = '/admin-setup'
