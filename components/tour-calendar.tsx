@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import PayPalPayment from "./paypal-payment"
 import BookingConfirmation from "./booking-confirmation"
+import QuickRegistration from "./quick-registration"
 import { BookingService, type AvailabilityCalendar, type TimeSlot as APITimeSlot } from "@/services/booking-service"
 import { useQuery } from "@tanstack/react-query"
 import { toast } from "sonner"
@@ -39,7 +40,7 @@ interface TourCalendarProps {
   onBooking?: (bookingId: string, date: Date, time: string) => void
 }
 
-type BookingStep = 'calendar' | 'payment' | 'confirmation'
+type BookingStep = 'calendar' | 'registration' | 'payment' | 'confirmation'
 
 export default function TourCalendar({ tourId, tourTitle, tourPrice, tourInfo, onBooking }: TourCalendarProps) {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -144,8 +145,14 @@ export default function TourCalendar({ tourId, tourTitle, tourPrice, tourInfo, o
   }
 
   const handleBooking = async () => {
-    if (!selectedDate || !selectedTime || !selectedTimeSlot || !user) {
+    if (!selectedDate || !selectedTime || !selectedTimeSlot) {
       toast.error('Por favor, completa todos los campos requeridos')
+      return
+    }
+
+    // If user is not logged in, show registration form
+    if (!user) {
+      setCurrentStep('registration')
       return
     }
 
@@ -190,6 +197,18 @@ export default function TourCalendar({ tourId, tourTitle, tourPrice, tourInfo, o
     setCurrentStep('calendar')
   }
 
+  const handleRegistrationSuccess = () => {
+    setCurrentStep('calendar')
+    // Trigger booking creation after successful registration
+    setTimeout(() => {
+      handleBooking()
+    }, 500)
+  }
+
+  const handleRegistrationCancel = () => {
+    setCurrentStep('calendar')
+  }
+
   const handleNewBooking = () => {
     setSelectedDate(null)
     setSelectedTime(null)
@@ -210,6 +229,26 @@ export default function TourCalendar({ tourId, tourTitle, tourPrice, tourInfo, o
     if (guestCount > 1) {
       setGuestCount(guestCount - 1)
     }
+  }
+
+  // Render registration step
+  if (currentStep === 'registration') {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-semibold">Completa tu reserva</h3>
+          <Button variant="outline" onClick={() => setCurrentStep('calendar')}>
+            Volver al calendario
+          </Button>
+        </div>
+        
+        <QuickRegistration
+          tourTitle={tourTitle}
+          onSuccess={handleRegistrationSuccess}
+          onCancel={handleRegistrationCancel}
+        />
+      </div>
+    )
   }
 
   // Render payment step
@@ -557,7 +596,7 @@ export default function TourCalendar({ tourId, tourTitle, tourPrice, tourInfo, o
                             className="w-full bg-primary hover:bg-primary/90 text-sm sm:text-base" 
                             size="lg" 
                             onClick={handleBooking}
-                            disabled={isCreatingBooking || !user}
+                            disabled={isCreatingBooking}
                           >
                             {isCreatingBooking ? (
                               <>
@@ -566,16 +605,18 @@ export default function TourCalendar({ tourId, tourTitle, tourPrice, tourInfo, o
                                 <span className="sm:hidden">Creando...</span>
                               </>
                             ) : (
-                              <span className="hidden sm:inline">Proceder al pago</span>
-                            )}
-                            {!isCreatingBooking && (
-                              <span className="sm:hidden">Reservar</span>
+                              <>
+                                <span className="hidden sm:inline">
+                                  {user ? 'Proceder al pago' : 'Continuar reserva'}
+                                </span>
+                                <span className="sm:hidden">Reservar</span>
+                              </>
                             )}
                           </Button>
                           {!user && (
                             <p className="text-xs sm:text-sm text-muted-foreground text-center mt-2">
-                              <span className="hidden sm:inline">Debes iniciar sesión para realizar una reserva</span>
-                              <span className="sm:hidden">Inicia sesión para reservar</span>
+                              <span className="hidden sm:inline">Se te pedirá crear una cuenta o iniciar sesión</span>
+                              <span className="sm:hidden">Registro rápido requerido</span>
                             </p>
                           )}
                         </div>

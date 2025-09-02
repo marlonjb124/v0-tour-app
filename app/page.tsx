@@ -69,8 +69,24 @@ const FeatureCardsCarousel = () => {
   )
 }
 
+// City images mapping
+const cityImages: Record<string, string> = {
+  'Arequipa': '/santa-catalina-monastery-arequipa-colonial-archite.png',
+  'Barcelona': '/sagrada-familia-barcelona-architecture.png',
+  'Cusco': '/sacsayhuaman-fortress-cusco-stone-walls.png',
+  'Ica': '/huacachina-oasis-desert-sand-dunes-peru.png',
+  'Lima': '/lima-historic-center-colonial-architecture-cathedr.png',
+  'Madrid': '/museo-del-prado-madrid-art-gallery.png',
+  'Paracas': '/ballestas-islands-sea-lions-penguins-peru.png',
+  'Puno': '/lake-titicaca-floating-islands-uros-peru-bolivia.png',
+  'Valencia': '/valencia-city-arts-sciences-futuristic-architectur.png'
+}
+
 export default function HomePage() {
   const [selectedCity, setSelectedCity] = useState<string>("")
+  const [selectedFeaturedCity, setSelectedFeaturedCity] = useState<string>("")
+  const [selectedOneDayCity, setSelectedOneDayCity] = useState<string>("")
+  const [selectedMultiDayCity, setSelectedMultiDayCity] = useState<string>("")
   const [searchTerm, setSearchTerm] = useState<string>("") 
   const [searchInput, setSearchInput] = useState<string>("")  // For controlled input
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -118,22 +134,28 @@ export default function HomePage() {
 
   // Fetch featured tours
   const { data: featuredTours = [] } = useQuery({
-    queryKey: ['featured-tours'],
-    queryFn: () => TourService.getFeaturedTours(6),
+    queryKey: ['featured-tours', selectedFeaturedCity],
+    queryFn: () => TourService.getFeaturedTours(6, selectedFeaturedCity || undefined),
     staleTime: 10 * 60 * 1000, // 10 minutes
   })
 
   // Fetch one-day tours
   const { data: oneDayToursData = { items: [] } } = useQuery({
-    queryKey: ['one-day-tours'],
-    queryFn: () => TourService.getToursByCategory('one-day', { is_active: true }, 1, 8),
+    queryKey: ['one-day-tours', selectedOneDayCity],
+    queryFn: () => TourService.getToursByCategory('one-day', { 
+      is_active: true,
+      city: selectedOneDayCity || undefined
+    }, 1, 8),
     staleTime: 10 * 60 * 1000, // 10 minutes
   })
   
   // Fetch multi-day tours
   const { data: multiDayToursData = { items: [] } } = useQuery({
-    queryKey: ['multi-day-tours'],
-    queryFn: () => TourService.getToursByDuration(null, 2, { is_active: true }, 1, 8),
+    queryKey: ['multi-day-tours', selectedMultiDayCity],
+    queryFn: () => TourService.getToursByDuration(null, 2, { 
+      is_active: true,
+      city: selectedMultiDayCity || undefined
+    }, 1, 8),
     staleTime: 10 * 60 * 1000, // 10 minutes
   })
   
@@ -606,7 +628,17 @@ export default function HomePage() {
                 onClick={() => setSelectedCity(city)}
               >
                 <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-muted-foreground/20" />
+                  <img 
+                    src={cityImages[city] || '/images/default-city.png'} 
+                    alt={city}
+                    className="w-6 h-6 rounded-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                  <div className="w-6 h-6 rounded-full bg-muted-foreground/20 hidden" />
                   {city}
                 </div>
               </Button>
@@ -830,6 +862,48 @@ export default function HomePage() {
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold mb-8 text-center">Tours de un día</h2>
+
+          {/* City Filter Tabs for One-Day Tours */}
+          <div className="flex flex-wrap justify-center gap-4 mb-12">
+            <Button
+              variant={selectedOneDayCity === "" ? "default" : "outline"}
+              className={`rounded-full px-6 py-2 ${
+                selectedOneDayCity === "" ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border-border"
+              }`}
+              onClick={() => setSelectedOneDayCity("")}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-muted-foreground/20" />
+                Todos
+              </div>
+            </Button>
+            {cities.map((city) => (
+              <Button
+                key={city}
+                variant={selectedOneDayCity === city ? "default" : "outline"}
+                className={`rounded-full px-6 py-2 ${
+                  selectedOneDayCity === city ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border-border"
+                }`}
+                onClick={() => setSelectedOneDayCity(city)}
+              >
+                <div className="flex items-center gap-2">
+                  <img 
+                    src={cityImages[city] || '/images/default-city.png'} 
+                    alt={city}
+                    className="w-6 h-6 rounded-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                  <div className="w-6 h-6 rounded-full bg-muted-foreground/20 hidden" />
+                  {city}
+                </div>
+              </Button>
+            ))}
+          </div>
+
           <div className="relative">
             {oneDayTours.length === 0 ? (
               <div className="text-center py-12">
@@ -1026,7 +1100,48 @@ export default function HomePage() {
       {/* Multi-Day Tours Section */}
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold mb-2 text-center">Tours de Varios Días</h2>
+          <h2 className="text-3xl font-bold mb-8 text-center">Tours de Varios Días</h2>
+
+          {/* City Filter Tabs for Multi-Day Tours */}
+          <div className="flex flex-wrap justify-center gap-4 mb-12">
+            <Button
+              variant={selectedMultiDayCity === "" ? "default" : "outline"}
+              className={`rounded-full px-6 py-2 ${
+                selectedMultiDayCity === "" ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border-border"
+              }`}
+              onClick={() => setSelectedMultiDayCity("")}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-muted-foreground/20" />
+                Todos
+              </div>
+            </Button>
+            {cities.map((city) => (
+              <Button
+                key={city}
+                variant={selectedMultiDayCity === city ? "default" : "outline"}
+                className={`rounded-full px-6 py-2 ${
+                  selectedMultiDayCity === city ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border-border"
+                }`}
+                onClick={() => setSelectedMultiDayCity(city)}
+              >
+                <div className="flex items-center gap-2">
+                  <img 
+                    src={cityImages[city] || '/images/default-city.png'} 
+                    alt={city}
+                    className="w-6 h-6 rounded-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                  <div className="w-6 h-6 rounded-full bg-muted-foreground/20 hidden" />
+                  {city}
+                </div>
+              </Button>
+            ))}
+          </div>
           <p className="text-center text-muted-foreground mb-8">Experiencias completas para conocer más a fondo</p>
 
           {/* Multi-Day Tours Carousel */}
@@ -1227,6 +1342,48 @@ export default function HomePage() {
       <section className="py-16 px-4 bg-muted/30">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold mb-8 text-center">Tours Destacados</h2>
+
+          {/* City Filter Tabs for Featured Tours */}
+          <div className="flex flex-wrap justify-center gap-4 mb-12">
+            <Button
+              variant={selectedFeaturedCity === "" ? "default" : "outline"}
+              className={`rounded-full px-6 py-2 ${
+                selectedFeaturedCity === "" ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border-border"
+              }`}
+              onClick={() => setSelectedFeaturedCity("")}
+            >
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 rounded-full bg-muted-foreground/20" />
+                Todos
+              </div>
+            </Button>
+            {cities.map((city) => (
+              <Button
+                key={city}
+                variant={selectedFeaturedCity === city ? "default" : "outline"}
+                className={`rounded-full px-6 py-2 ${
+                  selectedFeaturedCity === city ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border-border"
+                }`}
+                onClick={() => setSelectedFeaturedCity(city)}
+              >
+                <div className="flex items-center gap-2">
+                  <img 
+                    src={cityImages[city] || '/images/default-city.png'} 
+                    alt={city}
+                    className="w-6 h-6 rounded-full object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                  <div className="w-6 h-6 rounded-full bg-muted-foreground/20 hidden" />
+                  {city}
+                </div>
+              </Button>
+            ))}
+          </div>
+
           <p className="text-center text-muted-foreground mb-12">Los tours más populares y mejor valorados</p>
 
           {/* Featured Tours Carousel */}

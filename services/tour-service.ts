@@ -157,17 +157,23 @@ export class TourService {
   /**
    * Get featured tours
    */
-  static async getFeaturedTours(limit = 6): Promise<Tour[]> {
+  static async getFeaturedTours(limit = 6, city?: string): Promise<Tour[]> {
     const supabase = createClient()
     
-    const { data, error } = await supabase
+    let query = supabase
       .from('tours')
       .select('*')
-      .eq('is_featured', true)
       .eq('is_active', true)
+      .eq('is_featured', true)
       .order('rating', { ascending: false })
-      .order('review_count', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(limit)
+
+    if (city) {
+      query = query.eq('city', city)
+    }
+
+    const { data, error } = await query
 
     if (error) {
       console.error('Error fetching featured tours:', error)
