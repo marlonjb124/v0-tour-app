@@ -52,7 +52,15 @@ export default function TourCalendar({ tourId, tourTitle, tourPrice, tourInfo, o
   const [bookingId, setBookingId] = useState<string | null>(null)
   const [isCreatingBooking, setIsCreatingBooking] = useState(false)
   
-  const { user } = useAuth()
+  // Safely handle auth context - may not be available on public pages
+  let user = null;
+  try {
+    const authContext = useAuth();
+    user = authContext?.user || null;
+  } catch (error) {
+    // AuthProvider not available - user remains null
+    user = null;
+  }
 
   // Get start and end dates for availability query (6 months from now to support navigation)
   const getDateRange = () => {

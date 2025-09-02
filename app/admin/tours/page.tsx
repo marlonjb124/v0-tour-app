@@ -294,7 +294,7 @@ export default function ToursManagement() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="">Todas las ciudades</SelectItem>
-                  {cities.map((city) => (
+                  {Array.isArray(cities) && cities.filter(city => typeof city === 'string' && city.trim() !== '').map((city) => (
                     <SelectItem key={city} value={city}>{city}</SelectItem>
                   ))}
                 </SelectContent>

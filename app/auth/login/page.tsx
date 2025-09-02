@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/auth-context'
+import { AuthService } from '@/services/auth-service'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -30,7 +30,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   
-  const { login, isAuthenticated } = useAuth()
   const router = useRouter()
   
 
@@ -63,11 +62,12 @@ export default function LoginPage() {
     setIsSubmitting(true)
     
     try {
-      await login(formData)
+      await AuthService.login(formData)
+      toast.success('Inicio de sesión correcto')
       router.push('/admin') // Redirect to admin dashboard after successful login
     } catch (error: any) {
       console.error('Login error:', error)
-      // Error is already handled by the auth context with toast
+      toast.error(error?.message || 'Error al iniciar sesión')
     } finally {
       setIsSubmitting(false)
     }

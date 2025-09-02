@@ -132,6 +132,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, []);
 
+  // Safety: if a session exists but loading takes too long (e.g., network stall on profile), stop blocking UI
+  useEffect(() => {
+    if (!isLoading) return;
+    const timer = setTimeout(() => {
+      if (isLoading && session) {
+        setIsLoading(false);
+      }
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [isLoading, session]);
+
 
   const login = async (credentials: LoginRequest) => {
     setIsLoading(true)
@@ -326,10 +337,26 @@ export const withAdminAuth = <P extends Record<string, any>>(
     }
 
     if (isAuthenticated && !user) {
-      if (typeof window !== 'undefined') {
-        window.location.href = '/admin-setup'
-      }
-      return null
+      return (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center max-w-md mx-auto p-6">
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-yellow-800 mb-2">
+                Perfil no encontrado
+              </h2>
+              <p className="text-yellow-700 mb-4">
+                Tu sesión está activa pero no encontramos un perfil en la base de datos. Pide a un administrador que cree tu perfil/rol manualmente en Supabase.
+              </p>
+              <a
+                href="/auth/login"
+                className="inline-block bg-yellow-600 text-white px-4 py-2 rounded-md hover:bg-yellow-700 transition-colors"
+              >
+                Ir a iniciar sesión
+              </a>
+            </div>
+          </div>
+        </div>
+      )
     }
 
     if (!isAdmin) {

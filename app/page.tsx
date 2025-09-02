@@ -126,7 +126,7 @@ export default function HomePage() {
   // Fetch one-day tours
   const { data: oneDayToursData = { items: [] } } = useQuery({
     queryKey: ['one-day-tours'],
-    queryFn: () => TourService.getToursByDuration(1, null, { is_active: true }, 1, 8),
+    queryFn: () => TourService.getToursByCategory('one-day', { is_active: true }, 1, 8),
     staleTime: 10 * 60 * 1000, // 10 minutes
   })
   
@@ -613,6 +613,7 @@ export default function HomePage() {
             ))}
           </div>
 
+
           {/* Horizontal Tours Scroll */}
           <div className="relative">
             {isLoading ? (
@@ -693,7 +694,7 @@ export default function HomePage() {
                               )}
                               {isCenter && (
                                 <Badge className="absolute top-3 right-3 bg-primary hover:bg-primary text-white animate-pulse">
-                                  ⭐ Destacado
+                                  ★ Destacado
                                 </Badge>
                               )}
                             </div>
@@ -828,10 +829,7 @@ export default function HomePage() {
       {/* One-Day Tours Section */}
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold mb-2 text-center">Tours de Un Día</h2>
-          <p className="text-center text-muted-foreground mb-8">Explora nuestros mejores tours de un día</p>
-
-          {/* One-Day Tours Carousel */}
+          <h2 className="text-3xl font-bold mb-8 text-center">Tours de un día</h2>
           <div className="relative">
             {oneDayTours.length === 0 ? (
               <div className="text-center py-12">
@@ -855,7 +853,6 @@ export default function HomePage() {
                   onTouchStart={handleOneDayTouchStart}
                   onTouchMove={handleOneDayTouchMove}
                   onTouchEnd={handleOneDayTouchEnd}
-                  onScroll={updateOneDayCenterCard}
                 >
                   <div className="flex gap-6 min-w-max px-4 py-8">
                     {oneDayTours.map((tour, index) => {

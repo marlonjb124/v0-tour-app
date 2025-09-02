@@ -19,6 +19,7 @@ async function getTourDetails(id: string): Promise<TourWithAvailability | null> 
     .from('tours')
     .select('*')
     .eq('id', id)
+    .eq('is_active', true)
     .single();
 
   if (tourResponse.error || !tourResponse.data) {
@@ -31,7 +32,7 @@ async function getTourDetails(id: string): Promise<TourWithAvailability | null> 
   const availabilityResponse = await supabase
     .from('tour_availability')
     .select('*')
-    .eq('tour_id', id)
+    .eq('tour_id', tour.id)
     .order('available_date', { ascending: true });
 
   if (availabilityResponse.error) {
