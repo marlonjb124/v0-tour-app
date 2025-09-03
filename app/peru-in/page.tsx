@@ -69,7 +69,7 @@ export default function PeruInPage() {
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url('/placeholder.jpg')`,
+            backgroundImage: `url('/machu-picchu-sunrise-andes-mountains-peru.png')`,
           }}
         >
           <div className="absolute inset-0 bg-black/40" />

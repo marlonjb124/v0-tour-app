@@ -69,7 +69,7 @@ export default function PeruOutPage() {
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url('/peru-out-hero.jpg')`,
+            backgroundImage: `url('/images/kyle-glenn-international-peru-out-unsplash.jpg')`,
           }}
         >
           <div className="absolute inset-0 bg-black/40" />

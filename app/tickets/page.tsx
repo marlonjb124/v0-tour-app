@@ -68,7 +68,7 @@ export default function TicketsPage() {
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
-            backgroundImage: `url('/tickets-hero.jpg')`,
+            backgroundImage: `url('/sagrada-familia-barcelona-architecture.png')`,
           }}
         >
           <div className="absolute inset-0 bg-black/40" />
