@@ -314,7 +314,6 @@ export default function BookingsManagement() {
                 <SelectValue placeholder="Estado" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos los estados</SelectItem>
                 <SelectItem value="pending">Pendientes</SelectItem>
                 <SelectItem value="confirmed">Confirmadas</SelectItem>
                 <SelectItem value="cancelled">Canceladas</SelectItem>
@@ -328,7 +327,6 @@ export default function BookingsManagement() {
                 <SelectValue placeholder="Pago" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos los pagos</SelectItem>
                 <SelectItem value="pending">Pendiente</SelectItem>
                 <SelectItem value="paid">Pagado</SelectItem>
                 <SelectItem value="refunded">Reembolsado</SelectItem>

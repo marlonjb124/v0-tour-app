@@ -1,57 +1,52 @@
 "use client"
 
 import { useState } from "react"
-import { TourService } from "@/services/tour-service"
+import { TourService, TourFilters } from "@/services/tour-service"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Star, Filter, ChevronDown, Ticket } from "lucide-react"
+import { Search, Star, Ticket } from "lucide-react"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
+import { TicketFilters } from "@/components/tickets-filters"
 
 export default function TicketsPage() {
-  const [selectedCity, setSelectedCity] = useState<string>("")
-  const [searchTerm, setSearchTerm] = useState<string>("")
+  const [filters, setFilters] = useState<TourFilters>({})
   const [searchInput, setSearchInput] = useState<string>("")
-  const [showFilters, setShowFilters] = useState(false)
 
-  // Fetch tickets only
+  // Fetch tickets
   const {
     data: ticketsData,
     isLoading,
     error,
     refetch
   } = useQuery({
-    queryKey: ['tickets', selectedCity, searchTerm],
-    queryFn: () => TourService.getTickets(
-      {
-        city: selectedCity || undefined,
-        search: searchTerm || undefined,
-      },
-      1, // page
-      24 // size - showing more items on this dedicated page
-    ),
+    queryKey: ['tickets', filters],
+    queryFn: () => TourService.getTickets(filters, 1, 24),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 3,
   })
 
-  // Fetch cities for tickets
+  // Fetch cities for filters
   const { data: cities = [] } = useQuery({
     queryKey: ['ticket-cities'],
-    queryFn: async () => {
-      const ticketsData = await TourService.getTickets({}, 1, 1000);
-      const uniqueCities = [...new Set(ticketsData.items.map(ticket => ticket.city))];
-      return uniqueCities.sort();
-    },
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    queryFn: TourService.getCities, // Re-using existing service method
+    staleTime: 30 * 60 * 1000,
+  });
+
+  // Fetch categories for filters
+  const { data: categories = [] } = useQuery({
+    queryKey: ['ticket-categories'],
+    queryFn: TourService.getTicketCategories,
+    staleTime: 30 * 60 * 1000,
   });
 
   const tickets = ticketsData?.items || []
   const totalTickets = ticketsData?.total || 0
 
   const handleSearch = () => {
-    setSearchTerm(searchInput.trim())
+    setFilters(prev => ({ ...prev, search: searchInput.trim() }))
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -107,74 +102,14 @@ export default function TicketsPage() {
       {/* Content Section */}
       <section className="py-12 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-bold">Tickets & Entradas</h2>
-              <p className="text-muted-foreground">
-                {totalTickets} opciones de tickets disponibles
-              </p>
-            </div>
-
-            {/* Filter Button (Mobile) */}
-            <Button 
-              variant="outline" 
-              className="md:hidden flex items-center gap-2"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="h-4 w-4" />
-              Filtros
-              <ChevronDown className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-            </Button>
-
-            {/* Desktop Filters */}
-            <div className="hidden md:flex flex-wrap gap-2">
-              <Button
-                variant={selectedCity === "" ? "default" : "outline"}
-                className="rounded-full"
-                onClick={() => setSelectedCity("")}
-              >
-                Todas las ubicaciones
-              </Button>
-              {cities.map((city) => (
-                <Button
-                  key={city}
-                  variant={selectedCity === city ? "default" : "outline"}
-                  className="rounded-full"
-                  onClick={() => setSelectedCity(city)}
-                >
-                  {city}
-                </Button>
-              ))}
-            </div>
+          <div className="mb-8">
+            <TicketFilters 
+              filters={filters} 
+              setFilters={setFilters} 
+              cities={cities} 
+              categories={categories} 
+            />
           </div>
-
-          {/* Mobile Filters (Collapsible) */}
-          {showFilters && (
-            <div className="md:hidden mb-8 p-4 bg-muted/30 rounded-lg">
-              <p className="font-medium mb-2">Ubicaciones</p>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant={selectedCity === "" ? "default" : "outline"}
-                  className="rounded-full"
-                  onClick={() => setSelectedCity("")}
-                >
-                  Todas
-                </Button>
-                {cities.map((city) => (
-                  <Button
-                    key={city}
-                    size="sm"
-                    variant={selectedCity === city ? "default" : "outline"}
-                    className="rounded-full"
-                    onClick={() => setSelectedCity(city)}
-                  >
-                    {city}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* Tickets Grid */}
           {error ? (
@@ -195,15 +130,14 @@ export default function TicketsPage() {
             <div className="text-center py-20">
               <h3 className="text-xl font-medium mb-2">No se encontraron tickets</h3>
               <p className="text-muted-foreground mb-4">
-                {selectedCity || searchTerm 
+                {Object.keys(filters).length > 0
                   ? "No hay tickets disponibles con los filtros seleccionados."
                   : "No hay tickets disponibles en este momento."
                 }
               </p>
-              {(selectedCity || searchTerm) && (
+              {Object.keys(filters).length > 0 && (
                 <Button onClick={() => {
-                  setSelectedCity("")
-                  setSearchTerm("")
+                  setFilters({})
                   setSearchInput("")
                 }}>
                   Ver todos los tickets

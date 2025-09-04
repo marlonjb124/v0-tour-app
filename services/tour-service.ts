@@ -3,7 +3,8 @@ import type { Database } from '@/lib/database.types'
 
 // Define interfaces based on database schema
 export type Tour = Database['public']['Tables']['tours']['Row'] & {
-  discount_percentage?: number
+  discount_percentage?: number;
+  coordinates?: any; // The type from DB is jsonb
 }
 
 export type CreateTourRequest = Database['public']['Tables']['tours']['Insert']
@@ -32,6 +33,10 @@ export interface TourFilters {
   category?: string
   location_type?: 'domestic' | 'international'
   tour_type?: 'tour' | 'ticket'
+  destination?: string
+  starting_point?: string
+  services?: string[]
+  duration?: [number, number]
 }
 
 
@@ -59,6 +64,14 @@ export class TourService {
     // Apply filters
     if (filters.city) {
       query = query.eq('city', filters.city)
+    }
+
+    if (filters.destination) {
+      query = query.eq('city', filters.destination) // Assuming destination maps to city
+    }
+
+    if (filters.starting_point) {
+      query = query.eq('starting_point', filters.starting_point)
     }
     
     if (filters.search) {
@@ -97,8 +110,14 @@ export class TourService {
       query = query.gte('duration', filters.min_days)
     }
     
-    if (filters.category !== undefined) {
+    if (filters.category) {
       query = query.eq('category', filters.category)
+    }
+
+    if (filters.services && filters.services.length > 0) {
+      // This is a bit tricky with Supabase. If services are stored in a JSONB array, you'd use `cs` (contains).
+      // Assuming `services` is a JSONB column like `["hotel-pickup", "private-tour"]`
+      query = query.cs('services', filters.services)
     }
 
     const { data, error, count } = await query
@@ -109,7 +128,7 @@ export class TourService {
     }
 
     // Add discount percentage calculation
-    const toursWithDiscount = (data || []).map(tour => ({
+    const toursWithDiscount = (data || []).map((tour: Tour) => ({
       ...tour,
       discount_percentage: tour.original_price 
         ? Math.round(((tour.original_price - tour.price) / tour.original_price) * 100)
@@ -181,7 +200,7 @@ export class TourService {
     }
 
     // Add discount percentage calculation
-    const toursWithDiscount = (data || []).map(tour => ({
+    const toursWithDiscount = (data || []).map((tour: Tour) => ({
       ...tour,
       discount_percentage: tour.original_price 
         ? Math.round(((tour.original_price - tour.price) / tour.original_price) * 100)
@@ -208,7 +227,7 @@ export class TourService {
     }
     
     // Extract unique cities
-    const uniqueCities = [...new Set((data || []).map(tour => tour.city))]
+    const uniqueCities = [...new Set((data || []).map((tour: { city: string | null }) => tour.city).filter(Boolean))] as string[]
     return uniqueCities.sort()
   }
 
@@ -277,6 +296,10 @@ export class TourService {
     if (filters.city) {
       query = query.eq('city', filters.city);
     }
+
+    if (filters.tour_type) {
+      query = query.eq('tour_type', filters.tour_type);
+    }
     
     const { data, error } = await query;
     
@@ -286,7 +309,7 @@ export class TourService {
     }
     
     // Add discount percentage calculation
-    const toursWithDiscount = (data || []).map(tour => ({
+    const toursWithDiscount = (data || []).map((tour: Tour) => ({
       ...tour,
       discount_percentage: tour.original_price 
         ? Math.round(((tour.original_price - tour.price) / tour.original_price) * 100)
@@ -317,6 +340,28 @@ export class TourService {
     size = 12
   ): Promise<PaginatedResponse<Tour>> {
     return this.getTours({ ...filters, tour_type: 'ticket' }, page, size);
+  }
+
+  /**
+   * Get available ticket categories
+   */
+  static async getTicketCategories(): Promise<string[]> {
+    const supabase = createClient()
+    
+    const { data, error } = await supabase
+      .from('tours')
+      .select('category')
+      .eq('is_active', true)
+      .eq('tour_type', 'ticket')
+
+    if (error) {
+      console.error('Error fetching ticket categories:', error)
+      throw new Error(`Failed to fetch ticket categories: ${error.message}`)
+    }
+    
+    // Extract unique categories
+    const uniqueCategories = [...new Set((data || []).map((tour: { category: string | null }) => tour.category).filter(Boolean))] as string[]
+    return uniqueCategories.sort()
   }
 
   /**
@@ -573,10 +618,10 @@ export class TourService {
     
     const tours = tourData || []
     const totalTours = tours.length
-    const activeTours = tours.filter(t => t.is_active).length
-    const featuredTours = tours.filter(t => t.is_featured).length
+    const activeTours = tours.filter((t: Tour) => t.is_active).length
+    const featuredTours = tours.filter((t: Tour) => t.is_featured).length
     const averageRating = tours.length > 0 
-      ? tours.reduce((sum, t) => sum + (t.rating || 0), 0) / tours.length
+      ? tours.reduce((sum: number, t: Tour) => sum + (t.rating || 0), 0) / tours.length
       : 0
     
     return {

@@ -113,6 +113,11 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Asegura que el mapa Leaflet no tape los menús */
+.leaflet-container {
+  z-index: 10 !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

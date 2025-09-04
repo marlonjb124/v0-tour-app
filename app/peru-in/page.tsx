@@ -1,20 +1,30 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { TourService } from "@/services/tour-service"
+import { TourService, type TourFilters as TourFiltersType } from "@/services/tour-service"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Star, Filter, ChevronDown } from "lucide-react"
+import { Search, Star } from "lucide-react"
+import { TourFilters } from "@/components/tours-filters"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
 
 export default function PeruInPage() {
-  const [selectedCity, setSelectedCity] = useState<string>("")
-  const [searchTerm, setSearchTerm] = useState<string>("")
+  const [filters, setFilters] = useState<TourFiltersType>({
+    city: "",
+    search: "",
+    category: "",
+    duration: undefined,
+    destination: "",
+    starting_point: "",
+    min_price: undefined,
+    max_price: undefined,
+    min_rating: undefined,
+    services: [],
+  });
   const [searchInput, setSearchInput] = useState<string>("")
-  const [showFilters, setShowFilters] = useState(false)
 
   // Fetch domestic tours
   const {
@@ -23,16 +33,8 @@ export default function PeruInPage() {
     error,
     refetch
   } = useQuery({
-    queryKey: ['peru-in-tours', selectedCity, searchTerm],
-    queryFn: () => TourService.getToursByLocationType(
-      'domestic',
-      {
-        city: selectedCity || undefined,
-        search: searchTerm || undefined,
-      },
-      1, // page
-      24 // size - showing more items on this dedicated page
-    ),
+    queryKey: ['tours', 'domestic', filters],
+    queryFn: () => TourService.getToursByLocationType('domestic', filters, 1, 24),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 3,
   })
@@ -52,7 +54,7 @@ export default function PeruInPage() {
   const totalTours = toursData?.total || 0
 
   const handleSearch = () => {
-    setSearchTerm(searchInput.trim())
+    setFilters((prev: TourFiltersType) => ({ ...prev, search: searchInput.trim() }));
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -107,75 +109,21 @@ export default function PeruInPage() {
 
       {/* Content Section */}
       <section className="py-12 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-            <div>
-              <h2 className="text-2xl md:text-3xl font-bold">Tours en Perú</h2>
-              <p className="text-muted-foreground">
-                {totalTours} experiencias para descubrir
-              </p>
-            </div>
-
-            {/* Filter Button (Mobile) */}
-            <Button 
-              variant="outline" 
-              className="md:hidden flex items-center gap-2"
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="h-4 w-4" />
-              Filtros
-              <ChevronDown className={`h-4 w-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
-            </Button>
-
-            {/* Desktop Filters */}
-            <div className="hidden md:flex flex-wrap gap-2">
-              <Button
-                variant={selectedCity === "" ? "default" : "outline"}
-                className="rounded-full"
-                onClick={() => setSelectedCity("")}
-              >
-                Todas las ciudades
-              </Button>
-              {cities.map((city) => (
-                <Button
-                  key={city}
-                  variant={selectedCity === city ? "default" : "outline"}
-                  className="rounded-full"
-                  onClick={() => setSelectedCity(city)}
-                >
-                  {city}
-                </Button>
-              ))}
-            </div>
+        <div className="max-w-7xl mx-auto">
+          <div className="mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold">Tours en Perú</h2>
+            <p className="text-muted-foreground">
+              {totalTours} experiencias para descubrir
+            </p>
           </div>
 
-          {/* Mobile Filters (Collapsible) */}
-          {showFilters && (
-            <div className="md:hidden mb-8 p-4 bg-muted/30 rounded-lg">
-              <p className="font-medium mb-2">Ciudades</p>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant={selectedCity === "" ? "default" : "outline"}
-                  className="rounded-full"
-                  onClick={() => setSelectedCity("")}
-                >
-                  Todas
-                </Button>
-                {cities.map((city) => (
-                  <Button
-                    key={city}
-                    size="sm"
-                    variant={selectedCity === city ? "default" : "outline"}
-                    className="rounded-full"
-                    onClick={() => setSelectedCity(city)}
-                  >
-                    {city}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
+          <div className="mb-8">
+            <TourFilters 
+              filters={filters}
+              setFilters={setFilters}
+              cities={cities}
+            />
+          </div>
 
           {/* Tours Grid */}
           {error ? (
@@ -196,18 +144,17 @@ export default function PeruInPage() {
             <div className="text-center py-20">
               <h3 className="text-xl font-medium mb-2">No se encontraron tours</h3>
               <p className="text-muted-foreground mb-4">
-                {selectedCity || searchTerm 
+                {filters.city || filters.search 
                   ? "No hay tours disponibles con los filtros seleccionados."
                   : "No hay tours domésticos disponibles en este momento."
                 }
               </p>
-              {(selectedCity || searchTerm) && (
+              {(filters.city || filters.search) && (
                 <Button onClick={() => {
-                  setSelectedCity("")
-                  setSearchTerm("")
-                  setSearchInput("")
+                  setFilters((prev: TourFiltersType) => ({ ...prev, city: '', search: '' }));
+                  setSearchInput("");
                 }}>
-                  Ver todos los tours
+                  Limpiar filtros
                 </Button>
               )}
             </div>

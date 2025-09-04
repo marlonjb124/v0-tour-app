@@ -6,12 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Star, MapPin, Calendar, Clock } from 'lucide-react'
-import Link from 'next/link'
-import Script from 'next/script'
-
-// Use a temporary default Mapbox token (should be replaced with env variable)
-const MAPBOX_TOKEN = 'pk.eyJ1IjoicGxhY2Vob2xkZXIiLCJhIjoiY2xleGljZGJwMDZvbDN5cW92cGQ3ZnRvNCJ9.p9xYjvzCeVhkuKlV0vNtfw';
+import { Star, MapPin, Calendar, Clock } from 'lucide-react';
+import Link from 'next/link';
+import dynamic from 'next/dynamic';
+import 'leaflet/dist/leaflet.css';
 
 export default function MapaInteractivoPage() {
   const [tours, setTours] = useState<Tour[]>([]);
@@ -21,11 +19,14 @@ export default function MapaInteractivoPage() {
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedCity, setSelectedCity] = useState<string>('all');
   const [cities, setCities] = useState<string[]>([]);
-  const [mapInitialized, setMapInitialized] = useState(false);
-  
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<any>(null);
-  const markers = useRef<any[]>([]);
+  const [client, setClient] = useState(false);
+
+  // Dynamically import the Map component to avoid SSR issues with Leaflet
+  const Map = dynamic(() => import('@/components/map'), { ssr: false });
+
+  useEffect(() => {
+    setClient(true);
+  }, []);
 
   // Load tours with coordinates
   useEffect(() => {
@@ -59,107 +60,8 @@ export default function MapaInteractivoPage() {
     loadToursWithCoordinates();
   }, [selectedType, selectedCity]);
 
-  // Initialize map when component mounts
-  useEffect(() => {
-    if (!window.mapboxgl || !mapContainer.current || map.current) return;
-    
-    try {
-      window.mapboxgl.accessToken = MAPBOX_TOKEN;
-      
-      map.current = new window.mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v12',
-        center: [-75.015, -9.189], // Center of Peru
-        zoom: 5,
-      });
-      
-      map.current.addControl(new window.mapboxgl.NavigationControl());
-      
-      map.current.on('load', () => {
-        setMapInitialized(true);
-      });
-    } catch (err) {
-      console.error('Error initializing map:', err);
-      setError('No se pudo inicializar el mapa. Intente nuevamente más tarde.');
-    }
-  }, []);
-
-  // Update markers when tours or map changes
-  useEffect(() => {
-    if (!mapInitialized || !map.current || !tours.length) return;
-    
-    // Clear existing markers
-    markers.current.forEach(marker => marker.remove());
-    markers.current = [];
-    
-    // Add new markers
-    const bounds = new window.mapboxgl.LngLatBounds();
-    
-    tours.forEach(tour => {
-      if (!tour.coordinates) return;
-      
-      try {
-        const coordinates = typeof tour.coordinates === 'string' 
-          ? JSON.parse(tour.coordinates) 
-          : tour.coordinates;
-        
-        if (!coordinates?.lng || !coordinates?.lat) return;
-        
-        // Create custom marker element
-        const el = document.createElement('div');
-        el.className = 'custom-marker';
-        el.style.width = '30px';
-        el.style.height = '30px';
-        el.style.borderRadius = '50%';
-        el.style.display = 'flex';
-        el.style.alignItems = 'center';
-        el.style.justifyContent = 'center';
-        el.style.backgroundColor = tour.tour_type === 'ticket' ? '#3b82f6' : '#ef4444';
-        el.style.color = 'white';
-        el.style.fontWeight = 'bold';
-        el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-        el.style.cursor = 'pointer';
-        el.innerHTML = tour.tour_type === 'ticket' ? '🎟️' : '🏞️';
-        el.title = tour.title;
-        
-        // Create marker and popup
-        const marker = new window.mapboxgl.Marker(el)
-          .setLngLat([coordinates.lng, coordinates.lat])
-          .addTo(map.current);
-          
-        marker.getElement().addEventListener('click', () => {
-          setSelectedTour(tour);
-        });
-        
-        markers.current.push(marker);
-        bounds.extend([coordinates.lng, coordinates.lat]);
-      } catch (err) {
-        console.error(`Error creating marker for tour ${tour.id}:`, err);
-      }
-    });
-    
-    // Fit map to bounds if there are markers
-    if (!bounds.isEmpty()) {
-      map.current.fitBounds(bounds, {
-        padding: 50,
-        maxZoom: 10,
-        duration: 1000
-      });
-    }
-  }, [tours, mapInitialized]);
-
   return (
     <main className="min-h-screen">
-      {/* Load Mapbox GL JS from CDN */}
-      <Script 
-        src="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js"
-        onLoad={() => console.log('Mapbox script loaded')}
-      />
-      <link 
-        href="https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css" 
-        rel="stylesheet" 
-      />
-      
       {/* Hero Section */}
       <section className="relative h-[250px] flex items-center justify-center overflow-hidden">
         <div
@@ -229,25 +131,20 @@ export default function MapaInteractivoPage() {
       <div className="flex flex-col md:flex-row h-[600px]">
         {/* Map Container */}
         <div className="flex-1 h-[300px] md:h-full">
-          {error ? (
-            <div className="h-full flex items-center justify-center bg-muted">
-              <div className="text-center p-4">
-                <p className="text-destructive font-medium mb-2">Error</p>
-                <p className="text-muted-foreground">{error}</p>
-                <Button 
-                  className="mt-4"
-                  onClick={() => window.location.reload()}
-                >
-                  Reintentar
-                </Button>
+          <div className="relative w-full h-full">
+            {client ? (
+              <Map tours={tours} onMarkerClick={setSelectedTour} />
+            ) : (
+              <div className="flex items-center justify-center h-full">
+                <p>Cargando mapa...</p>
               </div>
-            </div>
-          ) : (
-            <div 
-              ref={mapContainer} 
-              className="h-full w-full"
-            />
-          )}
+            )}
+            {error && (
+              <div className="absolute inset-0 flex items-center justify-center bg-red-100 text-red-700 z-10">
+                <p>{error}</p>
+              </div>
+            )}
+          </div>
         </div>
         
         {/* Sidebar */}

@@ -293,7 +293,6 @@ export default function ToursManagement() {
                   <SelectValue placeholder="Todas las ciudades" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas las ciudades</SelectItem>
                   {Array.isArray(cities) && cities.filter(city => typeof city === 'string' && city.trim() !== '').map((city) => (
                     <SelectItem key={city} value={city}>{city}</SelectItem>
                   ))}
@@ -308,7 +307,6 @@ export default function ToursManagement() {
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
                   <SelectItem value="true">Activos</SelectItem>
                   <SelectItem value="false">Inactivos</SelectItem>
                 </SelectContent>
@@ -322,7 +320,6 @@ export default function ToursManagement() {
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
                   <SelectItem value="true">Destacados</SelectItem>
                   <SelectItem value="false">No destacados</SelectItem>
                 </SelectContent>

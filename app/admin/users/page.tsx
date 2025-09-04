@@ -283,7 +283,6 @@ export default function UsersManagement() {
                 <SelectValue placeholder="Todos los roles" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos los roles</SelectItem>
                 <SelectItem value="admin">Administradores</SelectItem>
                 <SelectItem value="user">Usuarios</SelectItem>
               </SelectContent>
@@ -295,7 +294,6 @@ export default function UsersManagement() {
                 <SelectValue placeholder="Todos los estados" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos los estados</SelectItem>
                 <SelectItem value="true">Activos</SelectItem>
                 <SelectItem value="false">Inactivos</SelectItem>
               </SelectContent>

@@ -7,7 +7,7 @@
     "dev": "next dev",
     "lint": "next lint",
     "start": "next start",
-    "supabase:gen-types": "supabase gen types typescript --project-id hebbkx1anhila5yf > lib/database.types.ts"
+    "supabase:gen-types": "supabase gen types typescript --project-id pmdeyjcxsogqtofusgri > lib/database.types.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
@@ -55,6 +55,7 @@
     "geist": "latest",
     "input-otp": "1.4.1",
     "js-cookie": "^3.0.5",
+    "leaflet": "^1.9.4",
     "lucide-react": "^0.454.0",
     "mapbox-gl": "^3.14.0",
     "next": "15.2.4",
@@ -65,6 +66,7 @@
     "react-dom": "^19",
     "react-hook-form": "^7.60.0",
     "react-hot-toast": "^2.6.0",
+    "react-leaflet": "^5.0.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.4",
     "sonner": "^1.7.4",
@@ -75,12 +77,15 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.9",
+    "@types/leaflet": "^1.9.20",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv": "^17.2.2",
     "postcss": "^8.5",
     "supabase": "^2.39.2",
     "tailwindcss": "^4.1.9",
+    "ts-node": "^10.9.2",
     "tw-animate-css": "1.3.3",
     "typescript": "^5"
   }
