@@ -13,6 +13,105 @@ import { toast } from "sonner"
 import useEmblaCarousel from 'embla-carousel-react'
 import Autoplay from 'embla-carousel-autoplay'
 
+// Componente para el filtro de ciudades con "Ver más"
+const CityFilterGrid = ({ cities, cityImages, selectedCity, onCityChange }: {
+  cities: string[],
+  cityImages: Record<string, string>,
+  selectedCity: string,
+  onCityChange: (city: string) => void
+}) => {
+  const [showAll, setShowAll] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [columns, setColumns] = useState(3);
+
+  useEffect(() => {
+    const checkDevice = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (mobile) {
+        if (window.innerWidth < 400) setColumns(2);
+        else if (window.innerWidth < 600) setColumns(3);
+        else setColumns(4);
+      } else {
+        setColumns(5); // Columns for desktop
+      }
+    };
+    checkDevice();
+    window.addEventListener('resize', checkDevice);
+    return () => window.removeEventListener('resize', checkDevice);
+  }, []);
+
+  const maxRows = 2;
+  const limit = columns * maxRows;
+  // Incluir el botón "Todos" en el cálculo del límite
+  const totalItems = cities.length + 1; // +1 para el botón "Todos"
+  const visibleCities = isMobile && !showAll ? cities.slice(0, Math.max(0, limit - 1)) : cities;
+
+  // Generar clases CSS válidas para el grid
+  const getGridClass = () => {
+    if (!isMobile) {
+      return 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6';
+    }
+    
+    switch (columns) {
+      case 2: return 'grid-cols-2';
+      case 3: return 'grid-cols-3';
+      case 4: return 'grid-cols-4';
+      case 5: return 'grid-cols-5';
+      default: return 'grid-cols-3';
+    }
+  };
+
+  return (
+    <div className="flex flex-col items-center gap-4 mb-12">
+      <div className={`grid gap-4 justify-items-center ${getGridClass()}`}>
+        <Button
+          variant={selectedCity === "" ? "default" : "outline"}
+          className={`rounded-full px-6 py-2 ${
+            selectedCity === "" ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border-border"
+          }`}
+          onClick={() => onCityChange("")}
+        >
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-full bg-muted-foreground/20" />
+            Todos
+          </div>
+        </Button>
+        {visibleCities.map((city) => (
+          <Button
+            key={city}
+            variant={selectedCity === city ? "default" : "outline"}
+            className={`rounded-full px-6 py-2 ${
+              selectedCity === city ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border-border"
+            }`}
+            onClick={() => onCityChange(city)}
+          >
+            <div className="flex items-center gap-2">
+              <img 
+                src={cityImages[city] || '/images/default-city.png'} 
+                alt={city}
+                className="w-6 h-6 rounded-full object-cover"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  target.nextElementSibling?.classList.remove('hidden');
+                }}
+              />
+              <div className="w-6 h-6 rounded-full bg-muted-foreground/20 hidden" />
+              {city}
+            </div>
+          </Button>
+        ))}
+      </div>
+      {isMobile && totalItems > limit && (
+        <Button variant="link" onClick={() => setShowAll(!showAll)}>
+          {showAll ? "Ver menos" : "Ver más"}
+        </Button>
+      )}
+    </div>
+  );
+};
+
 const FeatureCardsCarousel = () => {
   const [emblaRef] = useEmblaCarousel({
     loop: true,
@@ -107,6 +206,7 @@ export default function HomePage() {
     queryKey: ['cities'],
     queryFn: TourService.getCities,
     staleTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: true,
   })
 
   // Fetch tours with infinite query for horizontal scrolling
@@ -137,6 +237,7 @@ export default function HomePage() {
     queryKey: ['featured-tours', selectedFeaturedCity],
     queryFn: () => TourService.getFeaturedTours(6, selectedFeaturedCity || undefined),
     staleTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: true,
   })
 
   // Fetch one-day tours
@@ -147,6 +248,7 @@ export default function HomePage() {
       city: selectedOneDayCity || undefined
     }, 1, 8),
     staleTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: true,
   })
   
   // Fetch multi-day tours
@@ -157,6 +259,7 @@ export default function HomePage() {
       city: selectedMultiDayCity || undefined
     }, 1, 8),
     staleTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: true,
   })
   
   // Extract tour arrays from data
@@ -296,18 +399,24 @@ export default function HomePage() {
 
   // Touch handlers for mobile
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
-    setIsDragging(true)
+    setIsDragging(false) // Don't set dragging immediately
     setStartX(e.touches[0].pageX - (scrollContainerRef.current?.offsetLeft || 0))
     setScrollLeft(scrollContainerRef.current?.scrollLeft || 0)
   }, [])
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isDragging || !scrollContainerRef.current) return
+    if (!scrollContainerRef.current) return
     const x = e.touches[0].pageX - (scrollContainerRef.current.offsetLeft || 0)
-    const walk = (x - startX) * 1.5 // Touch scroll speed
-    scrollContainerRef.current.scrollLeft = scrollLeft - walk
-    updateCenterCard()
-  }, [isDragging, startX, scrollLeft, updateCenterCard])
+    const deltaX = Math.abs(x - startX)
+    
+    // Only start dragging if moved more than 10px
+    if (deltaX > 10) {
+      setIsDragging(true)
+      const walk = (x - startX) * 1.5 // Touch scroll speed
+      scrollContainerRef.current.scrollLeft = scrollLeft - walk
+      updateCenterCard()
+    }
+  }, [startX, scrollLeft, updateCenterCard])
 
   const handleTouchEnd = useCallback(() => {
     setIsDragging(false)
@@ -375,18 +484,23 @@ export default function HomePage() {
 
   // Featured tours touch handlers
   const handleFeaturedTouchStart = useCallback((e: React.TouchEvent) => {
-    setIsDragging(true)
+    setIsDragging(false)
     setStartX(e.touches[0].pageX - (featuredScrollContainerRef.current?.offsetLeft || 0))
     setScrollLeft(featuredScrollContainerRef.current?.scrollLeft || 0)
   }, [])
 
   const handleFeaturedTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isDragging || !featuredScrollContainerRef.current) return
+    if (!featuredScrollContainerRef.current) return
     const x = e.touches[0].pageX - (featuredScrollContainerRef.current.offsetLeft || 0)
-    const walk = (x - startX) * 1.5
-    featuredScrollContainerRef.current.scrollLeft = scrollLeft - walk
-    updateFeaturedCenterCard()
-  }, [isDragging, startX, scrollLeft, updateFeaturedCenterCard])
+    const deltaX = Math.abs(x - startX)
+    
+    if (deltaX > 10) {
+      setIsDragging(true)
+      const walk = (x - startX) * 1.5
+      featuredScrollContainerRef.current.scrollLeft = scrollLeft - walk
+      updateFeaturedCenterCard()
+    }
+  }, [startX, scrollLeft, updateFeaturedCenterCard])
 
   const handleFeaturedTouchEnd = useCallback(() => {
     setIsDragging(false)
@@ -441,18 +555,23 @@ export default function HomePage() {
 
   // One-day tours touch handlers
   const handleOneDayTouchStart = useCallback((e: React.TouchEvent) => {
-    setIsDragging(true)
+    setIsDragging(false)
     setStartX(e.touches[0].pageX - (oneDayScrollContainerRef.current?.offsetLeft || 0))
     setScrollLeft(oneDayScrollContainerRef.current?.scrollLeft || 0)
   }, [])
 
   const handleOneDayTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isDragging || !oneDayScrollContainerRef.current) return
+    if (!oneDayScrollContainerRef.current) return
     const x = e.touches[0].pageX - (oneDayScrollContainerRef.current.offsetLeft || 0)
-    const walk = (x - startX) * 1.5
-    oneDayScrollContainerRef.current.scrollLeft = scrollLeft - walk
-    updateOneDayCenterCard()
-  }, [isDragging, startX, scrollLeft, updateOneDayCenterCard])
+    const deltaX = Math.abs(x - startX)
+    
+    if (deltaX > 10) {
+      setIsDragging(true)
+      const walk = (x - startX) * 1.5
+      oneDayScrollContainerRef.current.scrollLeft = scrollLeft - walk
+      updateOneDayCenterCard()
+    }
+  }, [startX, scrollLeft, updateOneDayCenterCard])
 
   const handleOneDayTouchEnd = useCallback(() => {
     setIsDragging(false)
@@ -507,18 +626,23 @@ export default function HomePage() {
 
   // Multi-day tours touch handlers
   const handleMultiDayTouchStart = useCallback((e: React.TouchEvent) => {
-    setIsDragging(true)
+    setIsDragging(false)
     setStartX(e.touches[0].pageX - (multiDayScrollContainerRef.current?.offsetLeft || 0))
     setScrollLeft(multiDayScrollContainerRef.current?.scrollLeft || 0)
   }, [])
 
   const handleMultiDayTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!isDragging || !multiDayScrollContainerRef.current) return
+    if (!multiDayScrollContainerRef.current) return
     const x = e.touches[0].pageX - (multiDayScrollContainerRef.current.offsetLeft || 0)
-    const walk = (x - startX) * 1.5
-    multiDayScrollContainerRef.current.scrollLeft = scrollLeft - walk
-    updateMultiDayCenterCard()
-  }, [isDragging, startX, scrollLeft, updateMultiDayCenterCard])
+    const deltaX = Math.abs(x - startX)
+    
+    if (deltaX > 10) {
+      setIsDragging(true)
+      const walk = (x - startX) * 1.5
+      multiDayScrollContainerRef.current.scrollLeft = scrollLeft - walk
+      updateMultiDayCenterCard()
+    }
+  }, [startX, scrollLeft, updateMultiDayCenterCard])
 
   const handleMultiDayTouchEnd = useCallback(() => {
     setIsDragging(false)
@@ -605,45 +729,12 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold mb-8 text-center">Los mejores lugares para visitar en Perú</h2>
 
           {/* City Filter Tabs */}
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
-            <Button
-              variant={selectedCity === "" ? "default" : "outline"}
-              className={`rounded-full px-6 py-2 ${
-                selectedCity === "" ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border-border"
-              }`}
-              onClick={() => setSelectedCity("")}
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-muted-foreground/20" />
-                Todos
-              </div>
-            </Button>
-            {cities.map((city) => (
-              <Button
-                key={city}
-                variant={selectedCity === city ? "default" : "outline"}
-                className={`rounded-full px-6 py-2 ${
-                  selectedCity === city ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border-border"
-                }`}
-                onClick={() => setSelectedCity(city)}
-              >
-                <div className="flex items-center gap-2">
-                  <img 
-                    src={cityImages[city] || '/images/default-city.png'} 
-                    alt={city}
-                    className="w-6 h-6 rounded-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      target.nextElementSibling?.classList.remove('hidden');
-                    }}
-                  />
-                  <div className="w-6 h-6 rounded-full bg-muted-foreground/20 hidden" />
-                  {city}
-                </div>
-              </Button>
-            ))}
-          </div>
+          <CityFilterGrid 
+            cities={cities}
+            cityImages={cityImages}
+            selectedCity={selectedCity}
+            onCityChange={setSelectedCity}
+          />
 
 
           {/* Horizontal Tours Scroll */}

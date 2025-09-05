@@ -26,6 +26,7 @@ export default function TicketsPage() {
     queryFn: () => TourService.getTickets(filters, 1, 24),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 3,
+    refetchOnWindowFocus: true,
   })
 
   // Fetch cities for filters
@@ -33,6 +34,7 @@ export default function TicketsPage() {
     queryKey: ['ticket-cities'],
     queryFn: TourService.getCities, // Re-using existing service method
     staleTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 
   // Fetch categories for filters
@@ -40,6 +42,7 @@ export default function TicketsPage() {
     queryKey: ['ticket-categories'],
     queryFn: TourService.getTicketCategories,
     staleTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: true,
   });
 
   const tickets = ticketsData?.items || []

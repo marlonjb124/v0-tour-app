@@ -151,14 +151,16 @@ export default function MapaInteractivoPage() {
         <div className="w-full md:w-[350px] border-l bg-card overflow-y-auto">
           {selectedTour ? (
             <div className="p-4">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="mb-2"
-                onClick={() => setSelectedTour(null)}
-              >
-                ← Volver a la lista
-              </Button>
+              <div className="sticky top-0 z-30 bg-card pt-2 pb-2 md:static md:z-auto">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="mb-2"
+                  onClick={() => setSelectedTour(null)}
+                >
+                  ← Volver a la lista
+                </Button>
+              </div>
               
               <Card className="overflow-hidden">
                 <div className="relative h-48">

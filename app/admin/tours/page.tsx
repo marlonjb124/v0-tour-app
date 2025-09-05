@@ -98,6 +98,7 @@ export default function ToursManagement() {
       pageSize
     ),
     staleTime: 2 * 60 * 1000, // 2 minutes
+    refetchOnWindowFocus: true,
   })
 
   // Fetch cities for filter
@@ -105,6 +106,7 @@ export default function ToursManagement() {
     queryKey: ['cities'],
     queryFn: TourService.getCities,
     staleTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: true,
   })
 
   // Delete tour mutation

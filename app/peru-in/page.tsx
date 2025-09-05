@@ -37,6 +37,7 @@ export default function PeruInPage() {
     queryFn: () => TourService.getToursByLocationType('domestic', filters, 1, 24),
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 3,
+    refetchOnWindowFocus: true,
   })
 
   // Fetch cities for domestic tours
@@ -48,6 +49,7 @@ export default function PeruInPage() {
       return uniqueCities.sort();
     },
     staleTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: true,
   });
 
   const tours = toursData?.items || []
