@@ -1,26 +1,21 @@
 {
-    "mcp": {
-
-        "inputs": [],
-        "servers": {
-            // "mcp-server-time": {
-            //     "command": "python",
-            //     "args": [
-            //         "-m",
-            //         "mcp_server_time",
-            //         "--local-timezone=America/Los_Angeles"
-            //     ],
-            //     "env": {}
-            // },
-            "supabase": {
-                "command": "npx",
-                "args": [
-                  "-y",
-                  "@supabase/mcp-server-supabase@latest",
-                  "--project-ref=pmdeyjcxsogqtofusgri",
-                  "--access-token=sbp_97253cc910a3461d62d2881bd643569db8f1f916"
-                ]     }
+  "mcp": {
+    "inputs": [],
+    "servers": {
+      "supabase": {
+        "command": "npx",
+        "args": [
+          "-y",
+          "@supabase/mcp-server-supabase@latest",
+          "--project-ref=pmdeyjcxsogqtofusgri",
+          "--access-token=sbp_97253cc910a3461d62d2881bd643569db8f1f916"
+        ],
+        "env": {
+          "SUPABASE_URL": "https://pmdeyjcxsogqtofusgri.supabase.co",
+          "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9....",
+          "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...."
         }
-
+      }
     }
+  }
 }

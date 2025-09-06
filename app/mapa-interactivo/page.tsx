@@ -9,16 +9,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Star, MapPin, Calendar, Clock } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { useQuery } from '@tanstack/react-query'
 import 'leaflet/dist/leaflet.css';
 
 export default function MapaInteractivoPage() {
-  const [tours, setTours] = useState<Tour[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedCity, setSelectedCity] = useState<string>('all');
-  const [cities, setCities] = useState<string[]>([]);
   const [client, setClient] = useState(false);
 
   // Dynamically import the Map component to avoid SSR issues with Leaflet
@@ -28,37 +25,32 @@ export default function MapaInteractivoPage() {
     setClient(true);
   }, []);
 
-  // Load tours with coordinates
-  useEffect(() => {
-    async function loadToursWithCoordinates() {
-      try {
-        setLoading(true);
-        const filters: any = {};
-        
-        if (selectedType !== 'all') {
-          filters.tour_type = selectedType;
-        }
-        
-        if (selectedCity !== 'all') {
-          filters.city = selectedCity;
-        }
-        
-        const toursData = await TourService.getToursWithCoordinates(filters);
-        setTours(toursData);
-        
-        // Extract unique cities from tours for filter
-        const uniqueCities = [...new Set(toursData.map(tour => tour.city))];
-        setCities(uniqueCities.sort());
-      } catch (err) {
-        console.error('Error loading tours:', err);
-        setError('No se pudieron cargar los tours. Intente nuevamente más tarde.');
-      } finally {
-        setLoading(false);
+  // Fetch tours with coordinates using React Query
+  const {
+    data: tours = [],
+    isLoading: loading,
+    error
+  } = useQuery({
+    queryKey: ['tours-with-coordinates', selectedType, selectedCity],
+    queryFn: () => {
+      const filters: any = {};
+      
+      if (selectedType !== 'all') {
+        filters.tour_type = selectedType;
       }
-    }
-    
-    loadToursWithCoordinates();
-  }, [selectedType, selectedCity]);
+      
+      if (selectedCity !== 'all') {
+        filters.city = selectedCity;
+      }
+      
+      return TourService.getToursWithCoordinates(filters);
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: true,
+  });
+
+  // Extract unique cities from tours for filter
+  const cities = [...new Set(tours.map(tour => tour.city))].sort();
 
   return (
     <main className="min-h-screen">
@@ -133,7 +125,7 @@ export default function MapaInteractivoPage() {
         <div className="flex-1 h-[300px] md:h-full">
           <div className="relative w-full h-full">
             {client ? (
-              <Map tours={tours} onMarkerClick={setSelectedTour} />
+              <Map tours={tours} onMarkerClick={setSelectedTour} selectedTour={selectedTour} />
             ) : (
               <div className="flex items-center justify-center h-full">
                 <p>Cargando mapa...</p>
@@ -141,7 +133,7 @@ export default function MapaInteractivoPage() {
             )}
             {error && (
               <div className="absolute inset-0 flex items-center justify-center bg-red-100 text-red-700 z-10">
-                <p>{error}</p>
+                <p>Error al cargar los tours. Intente nuevamente.</p>
               </div>
             )}
           </div>

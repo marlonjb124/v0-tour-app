@@ -285,8 +285,7 @@ export class TourService {
     let query = supabase
       .from('tours')
       .select('*')
-      .eq('is_active', true)
-      .not('coordinates', 'is', null);
+      .eq('is_active', true);
       
     // Apply additional filters
     if (filters.category) {
@@ -308,13 +307,65 @@ export class TourService {
       throw new Error(`Failed to fetch tours with coordinates: ${error.message}`);
     }
     
-    // Add discount percentage calculation
-    const toursWithDiscount = (data || []).map((tour: Tour) => ({
-      ...tour,
-      discount_percentage: tour.original_price 
-        ? Math.round(((tour.original_price - tour.price) / tour.original_price) * 100)
-        : undefined
-    }));
+    // Default coordinates for major Peruvian cities
+    const cityCoordinates: { [key: string]: [number, number] } = {
+      'Lima': [-12.0464, -77.0428],
+      'Cusco': [-13.5319, -71.9675],
+      'Arequipa': [-16.4090, -71.5375],
+      'Trujillo': [-8.1116, -79.0287],
+      'Chiclayo': [-6.7714, -79.8371],
+      'Piura': [-5.1945, -80.6328],
+      'Iquitos': [-3.7437, -73.2516],
+      'Huancayo': [-12.0653, -75.2049],
+      'Pucallpa': [-8.3791, -74.5539],
+      'Tacna': [-18.0056, -70.2533],
+      'Ica': [-14.0678, -75.7286],
+      'Ayacucho': [-13.1586, -74.2236],
+      'Cajamarca': [-7.1561, -78.5150],
+      'Puno': [-15.8402, -70.0219],
+      'Huaraz': [-9.5277, -77.5278],
+      'Tarapoto': [-6.4869, -76.3649],
+      'Tumbes': [-3.5669, -80.4515],
+      'Chimbote': [-9.0853, -78.5784],
+      'Juliaca': [-15.5000, -70.1333],
+      'Sullana': [-4.9047, -80.6856],
+      'Chincha': [-13.4099, -76.1319],
+      'Huánuco': [-9.9306, -76.2422],
+      'Pisco': [-13.7103, -76.2056],
+      'Paracas': [-13.8608, -76.2511],
+      'Nazca': [-14.8249, -74.9281],
+      'Machu Picchu': [-13.1631, -72.5450],
+      'Ollantaytambo': [-13.2594, -72.2653],
+      'Pisac': [-13.4219, -71.8469],
+      'Aguas Calientes': [-13.1547, -72.5253],
+      'Sacsayhuamán': [-13.5086, -71.9836]
+    };
+    
+    // Add discount percentage calculation and assign coordinates
+    const toursWithDiscount = (data || []).map((tour: Tour) => {
+      let coordinates = tour.coordinates;
+      
+      // If no coordinates, try to assign based on city
+      if (!coordinates && tour.city) {
+        const cityCoords = cityCoordinates[tour.city];
+        if (cityCoords) {
+          // Add small random offset to avoid overlapping markers
+          const randomOffset = () => (Math.random() - 0.5) * 0.01;
+          coordinates = [
+            cityCoords[0] + randomOffset(),
+            cityCoords[1] + randomOffset()
+          ];
+        }
+      }
+      
+      return {
+        ...tour,
+        coordinates,
+        discount_percentage: tour.original_price 
+          ? Math.round(((tour.original_price - tour.price) / tour.original_price) * 100)
+          : undefined
+      };
+    }).filter((tour: Tour) => tour.coordinates); // Only return tours with coordinates
     
     return toursWithDiscount;
   }
