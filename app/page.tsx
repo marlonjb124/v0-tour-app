@@ -954,45 +954,12 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold mb-8 text-center">Tours de un día</h2>
 
           {/* City Filter Tabs for One-Day Tours */}
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
-            <Button
-              variant={selectedOneDayCity === "" ? "default" : "outline"}
-              className={`rounded-full px-6 py-2 ${
-                selectedOneDayCity === "" ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border-border"
-              }`}
-              onClick={() => setSelectedOneDayCity("")}
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-muted-foreground/20" />
-                Todos
-              </div>
-            </Button>
-            {cities.map((city) => (
-              <Button
-                key={city}
-                variant={selectedOneDayCity === city ? "default" : "outline"}
-                className={`rounded-full px-6 py-2 ${
-                  selectedOneDayCity === city ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border-border"
-                }`}
-                onClick={() => setSelectedOneDayCity(city)}
-              >
-                <div className="flex items-center gap-2">
-                  <img 
-                    src={cityImages[city] || '/images/default-city.png'} 
-                    alt={city}
-                    className="w-6 h-6 rounded-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      target.nextElementSibling?.classList.remove('hidden');
-                    }}
-                  />
-                  <div className="w-6 h-6 rounded-full bg-muted-foreground/20 hidden" />
-                  {city}
-                </div>
-              </Button>
-            ))}
-          </div>
+          <CityFilterGrid
+            cities={cities}
+            cityImages={cityImages}
+            selectedCity={selectedOneDayCity}
+            onCityChange={setSelectedOneDayCity}
+          />
 
           <div className="relative">
             {oneDayTours.length === 0 ? (
@@ -1193,45 +1160,12 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold mb-8 text-center">Tours de Varios Días</h2>
 
           {/* City Filter Tabs for Multi-Day Tours */}
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
-            <Button
-              variant={selectedMultiDayCity === "" ? "default" : "outline"}
-              className={`rounded-full px-6 py-2 ${
-                selectedMultiDayCity === "" ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border-border"
-              }`}
-              onClick={() => setSelectedMultiDayCity("")}
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-muted-foreground/20" />
-                Todos
-              </div>
-            </Button>
-            {cities.map((city) => (
-              <Button
-                key={city}
-                variant={selectedMultiDayCity === city ? "default" : "outline"}
-                className={`rounded-full px-6 py-2 ${
-                  selectedMultiDayCity === city ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border-border"
-                }`}
-                onClick={() => setSelectedMultiDayCity(city)}
-              >
-                <div className="flex items-center gap-2">
-                  <img 
-                    src={cityImages[city] || '/images/default-city.png'} 
-                    alt={city}
-                    className="w-6 h-6 rounded-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      target.nextElementSibling?.classList.remove('hidden');
-                    }}
-                  />
-                  <div className="w-6 h-6 rounded-full bg-muted-foreground/20 hidden" />
-                  {city}
-                </div>
-              </Button>
-            ))}
-          </div>
+          <CityFilterGrid
+            cities={cities}
+            cityImages={cityImages}
+            selectedCity={selectedMultiDayCity}
+            onCityChange={setSelectedMultiDayCity}
+          />
           <p className="text-center text-muted-foreground mb-8">Experiencias completas para conocer más a fondo</p>
 
           {/* Multi-Day Tours Carousel */}
@@ -1434,45 +1368,12 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold mb-8 text-center">Tours Destacados</h2>
 
           {/* City Filter Tabs for Featured Tours */}
-          <div className="flex flex-wrap justify-center gap-4 mb-12">
-            <Button
-              variant={selectedFeaturedCity === "" ? "default" : "outline"}
-              className={`rounded-full px-6 py-2 ${
-                selectedFeaturedCity === "" ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border-border"
-              }`}
-              onClick={() => setSelectedFeaturedCity("")}
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-muted-foreground/20" />
-                Todos
-              </div>
-            </Button>
-            {cities.map((city) => (
-              <Button
-                key={city}
-                variant={selectedFeaturedCity === city ? "default" : "outline"}
-                className={`rounded-full px-6 py-2 ${
-                  selectedFeaturedCity === city ? "bg-primary text-primary-foreground" : "bg-card hover:bg-muted border-border"
-                }`}
-                onClick={() => setSelectedFeaturedCity(city)}
-              >
-                <div className="flex items-center gap-2">
-                  <img 
-                    src={cityImages[city] || '/images/default-city.png'} 
-                    alt={city}
-                    className="w-6 h-6 rounded-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      target.nextElementSibling?.classList.remove('hidden');
-                    }}
-                  />
-                  <div className="w-6 h-6 rounded-full bg-muted-foreground/20 hidden" />
-                  {city}
-                </div>
-              </Button>
-            ))}
-          </div>
+          <CityFilterGrid
+            cities={cities}
+            cityImages={cityImages}
+            selectedCity={selectedFeaturedCity}
+            onCityChange={setSelectedFeaturedCity}
+          />
 
           <p className="text-center text-muted-foreground mb-12">Los tours más populares y mejor valorados</p>
 
