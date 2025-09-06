@@ -10,10 +10,14 @@ import { Search, Star, Ticket } from "lucide-react"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
 import { TicketFilters } from "@/components/tickets-filters"
+import { useForceRefetch } from "@/lib/hooks/use-force-refetch"
 
 export default function TicketsPage() {
   const [filters, setFilters] = useState<TourFilters>({})
   const [searchInput, setSearchInput] = useState<string>("")
+
+  // Forzar refetch en cada acceso a la página
+  useForceRefetch()
 
   // Fetch tickets
   const {
@@ -24,7 +28,6 @@ export default function TicketsPage() {
   } = useQuery({
     queryKey: ['tickets', filters],
     queryFn: () => TourService.getTickets(filters, 1, 24),
-    staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 3,
     refetchOnWindowFocus: true,
   })
@@ -33,7 +36,6 @@ export default function TicketsPage() {
   const { data: cities = [] } = useQuery({
     queryKey: ['ticket-cities'],
     queryFn: TourService.getCities, // Re-using existing service method
-    staleTime: 30 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
 
@@ -41,7 +43,6 @@ export default function TicketsPage() {
   const { data: categories = [] } = useQuery({
     queryKey: ['ticket-categories'],
     queryFn: TourService.getTicketCategories,
-    staleTime: 30 * 60 * 1000,
     refetchOnWindowFocus: true,
   });
 

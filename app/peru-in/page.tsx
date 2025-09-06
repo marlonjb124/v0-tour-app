@@ -10,6 +10,7 @@ import { Search, Star } from "lucide-react"
 import { TourFilters } from "@/components/tours-filters"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
+import { useForceRefetch } from "@/lib/hooks/use-force-refetch"
 
 export default function PeruInPage() {
   const [filters, setFilters] = useState<TourFiltersType>({
@@ -26,6 +27,9 @@ export default function PeruInPage() {
   });
   const [searchInput, setSearchInput] = useState<string>("")
 
+  // Forzar refetch en cada acceso a la página
+  useForceRefetch()
+
   // Fetch domestic tours
   const {
     data: toursData,
@@ -35,7 +39,6 @@ export default function PeruInPage() {
   } = useQuery({
     queryKey: ['tours', 'domestic', filters],
     queryFn: () => TourService.getToursByLocationType('domestic', filters, 1, 24),
-    staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 3,
     refetchOnWindowFocus: true,
   })
@@ -48,7 +51,6 @@ export default function PeruInPage() {
       const uniqueCities = [...new Set(toursData.items.map(tour => tour.city))];
       return uniqueCities.sort();
     },
-    staleTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: true,
   });
 

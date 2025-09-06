@@ -12,6 +12,7 @@ import { TourService, Tour } from "@/services/tour-service"
 import { toast } from "sonner"
 import useEmblaCarousel from 'embla-carousel-react'
 import Autoplay from 'embla-carousel-autoplay'
+import { useForceRefetch } from "@/lib/hooks/use-force-refetch"
 
 // Componente para el filtro de ciudades con "Ver más"
 const CityFilterGrid = ({ cities, cityImages, selectedCity, onCityChange }: {
@@ -192,6 +193,9 @@ export default function HomePage() {
   const [isScrolling, setIsScrolling] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [startX, setStartX] = useState(0)
+
+  // Forzar refetch en cada acceso a la página
+  useForceRefetch()
   const [scrollLeft, setScrollLeft] = useState(0)
   const [centerCardIndex, setCenterCardIndex] = useState(0)
   const [featuredCenterCardIndex, setFeaturedCenterCardIndex] = useState(0)
@@ -205,7 +209,6 @@ export default function HomePage() {
   const { data: cities = [] } = useQuery({
     queryKey: ['cities'],
     queryFn: TourService.getCities,
-    staleTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: true,
   })
 
@@ -229,14 +232,12 @@ export default function HomePage() {
       const totalLoaded = allPages.reduce((acc, page) => acc + (page.items?.length || 0), 0)
       return totalLoaded < (lastPage.total || 0) ? allPages.length + 1 : undefined
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
   })
 
   // Fetch featured tours
   const { data: featuredTours = [] } = useQuery({
     queryKey: ['featured-tours', selectedFeaturedCity],
     queryFn: () => TourService.getFeaturedTours(6, selectedFeaturedCity || undefined),
-    staleTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: true,
   })
 
@@ -247,7 +248,6 @@ export default function HomePage() {
       is_active: true,
       city: selectedOneDayCity || undefined
     }, 1, 8),
-    staleTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: true,
   })
   
@@ -258,7 +258,6 @@ export default function HomePage() {
       is_active: true,
       city: selectedMultiDayCity || undefined
     }, 1, 8),
-    staleTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: true,
   })
   

@@ -6,17 +6,22 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Star, MapPin, Calendar, Clock } from 'lucide-react';
+import { Star, MapPin, Calendar, Clock, List, Map as MapIcon } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useQuery } from '@tanstack/react-query'
 import 'leaflet/dist/leaflet.css';
+import { useForceRefetch } from '@/lib/hooks/use-force-refetch'
 
 export default function MapaInteractivoPage() {
   const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
   const [selectedType, setSelectedType] = useState<string>('all');
   const [selectedCity, setSelectedCity] = useState<string>('all');
   const [client, setClient] = useState(false);
+  const [showMobileList, setShowMobileList] = useState(false);
+
+  // Forzar refetch en cada acceso a la página
+  useForceRefetch()
 
   // Dynamically import the Map component to avoid SSR issues with Leaflet
   const Map = dynamic(() => import('@/components/map'), { ssr: false });
@@ -24,6 +29,13 @@ export default function MapaInteractivoPage() {
   useEffect(() => {
     setClient(true);
   }, []);
+
+  // Effect to handle tour selection on mobile
+  useEffect(() => {
+    if (selectedTour && window.innerWidth < 768) {
+      setShowMobileList(true);
+    }
+  }, [selectedTour]);
 
   // Fetch tours with coordinates using React Query
   const {
@@ -45,7 +57,6 @@ export default function MapaInteractivoPage() {
       
       return TourService.getToursWithCoordinates(filters);
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
     refetchOnWindowFocus: true,
   });
 
@@ -54,8 +65,8 @@ export default function MapaInteractivoPage() {
 
   return (
     <main className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative h-[250px] flex items-center justify-center overflow-hidden">
+      {/* Hero Section - Hidden on mobile */}
+      <section className="relative h-[250px] flex items-center justify-center overflow-hidden hidden md:flex">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{
@@ -70,6 +81,31 @@ export default function MapaInteractivoPage() {
           <p className="text-lg opacity-90">
             Explora todos nuestros tours y tickets en un mapa interactivo del Perú
           </p>
+        </div>
+      </section>
+
+      {/* Mobile Header - Only visible on mobile */}
+      <section className="md:hidden bg-primary text-primary-foreground py-3 px-4">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-bold">Mapa Interactivo</h1>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowMobileList(!showMobileList)}
+            className="flex items-center gap-2"
+          >
+            {showMobileList ? (
+              <>
+                <MapIcon className="h-4 w-4" />
+                Mapa
+              </>
+            ) : (
+              <>
+                <List className="h-4 w-4" />
+                Lista
+              </>
+            )}
+          </Button>
         </div>
       </section>
       
@@ -120,9 +156,9 @@ export default function MapaInteractivoPage() {
       </section>
       
       {/* Map and Sidebar Layout */}
-      <div className="flex flex-col md:flex-row h-[600px]">
-        {/* Map Container */}
-        <div className="flex-1 h-[300px] md:h-full">
+      <div className="flex flex-col md:flex-row h-[calc(100vh-180px)] md:h-[600px]">
+        {/* Map Container - Hidden on mobile when showing list */}
+        <div className={`flex-1 ${showMobileList ? 'hidden md:block' : 'block'} h-[60vh] md:h-full`}>
           <div className="relative w-full h-full">
             {client ? (
               <Map tours={tours} onMarkerClick={setSelectedTour} selectedTour={selectedTour} />
@@ -139,19 +175,32 @@ export default function MapaInteractivoPage() {
           </div>
         </div>
         
-        {/* Sidebar */}
-        <div className="w-full md:w-[350px] border-l bg-card overflow-y-auto">
+        {/* Sidebar - Full width on mobile when showing list */}
+        <div className={`
+          ${showMobileList ? 'w-full h-[calc(100vh-180px)]' : 'hidden md:block'} 
+          md:w-[350px] md:h-full border-l bg-card overflow-y-auto
+        `}>
           {selectedTour ? (
             <div className="p-4">
               <div className="sticky top-0 z-30 bg-card pt-2 pb-2 md:static md:z-auto">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="mb-2"
-                  onClick={() => setSelectedTour(null)}
-                >
-                  ← Volver a la lista
-                </Button>
+                <div className="flex items-center gap-2 mb-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setSelectedTour(null)}
+                  >
+                    ← Volver a la lista
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="md:hidden"
+                    onClick={() => setShowMobileList(false)}
+                  >
+                    <MapIcon className="h-4 w-4 mr-1" />
+                    Ver mapa
+                  </Button>
+                </div>
               </div>
               
               <Card className="overflow-hidden">
