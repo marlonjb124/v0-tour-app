@@ -144,7 +144,7 @@ const CityFilterGrid = ({ cities, cityImages, selectedCity, onCityChange }: {
 };
 
 // Componente de carrusel estilo Tiqets
-const TiqetsStyleCarousel = ({ tours, title }: { tours: Tour[], title: string }) => {
+const TiqetsStyleCarousel = ({ tours}: { tours: Tour[]}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -190,7 +190,7 @@ const TiqetsStyleCarousel = ({ tours, title }: { tours: Tour[], title: string })
     <div className="space-y-6">
       {/* Header con navegación */}
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">{title}</h2>
+  
         {!isMobile && totalPages > 1 && (
           <div className="flex items-center gap-2">
             <Button
@@ -221,18 +221,31 @@ const TiqetsStyleCarousel = ({ tours, title }: { tours: Tour[], title: string })
       {/* Contenedor de cartas */}
       <div className="relative">
         {isMobile ? (
-          // Vista móvil con scroll horizontal
+          // Vista móvil con scroll horizontal snap
           <div 
             ref={scrollContainerRef}
-            className="overflow-x-auto scrollbar-hide"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            className="overflow-x-auto scrollbar-hide snap-x snap-mandatory"
+            style={{ 
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none',
+              scrollBehavior: 'smooth'
+            }}
           >
-            <div className="flex gap-4 pb-4">
-              {tours.map((tour) => (
-                <div key={tour.id} className="w-[420px] flex-shrink-0">
+            <div className="flex gap-4 pb-4 px-4">
+              {tours.map((tour, index) => (
+                <div 
+                  key={tour.id} 
+                  className="snap-start flex-shrink-0"
+                  style={{ 
+                    width: 'calc(100vw - 80px)', // Ancho de pantalla menos márgenes y preview
+                    maxWidth: '320px' // Máximo en pantallas grandes
+                  }}
+                >
                   <TiqetsCard tour={tour} />
                 </div>
               ))}
+              {/* Espacio extra para mostrar preview de la última tarjeta */}
+              <div className="w-4 flex-shrink-0"></div>
             </div>
           </div>
         ) : (
@@ -252,7 +265,7 @@ const TiqetsStyleCarousel = ({ tours, title }: { tours: Tour[], title: string })
 const TiqetsCard = ({ tour }: { tour: Tour }) => {
   return (
     <Link href={`/tour/${tour.id}`} className="block">
-      <div className="group cursor-pointer transition-all duration-300 hover:shadow-lg border border-gray-200 rounded-lg bg-white flex-shrink-0 w-full md:w-auto h-[350px] overflow-hidden flex flex-col">
+      <div className="group cursor-pointer transition-all duration-300 hover:shadow-lg border border-gray-200 rounded-lg bg-white flex-shrink-0 w-full h-[350px] overflow-hidden flex flex-col">
         {/* Imagen */}
         <div className="relative h-44 overflow-hidden">
           <img
@@ -599,7 +612,7 @@ export default function HomePage() {
           ) : (
             <TiqetsStyleCarousel 
               tours={tours} 
-              title="Experiencias destacadas en Perú"
+              
             />
           )}
         </div>
@@ -621,7 +634,7 @@ export default function HomePage() {
           {/* Tiqets Style Carousel */}
           <TiqetsStyleCarousel 
             tours={oneDayTours} 
-            title="Tours perfectos para un día"
+            
           />
         </div>
       </section>
@@ -642,7 +655,7 @@ export default function HomePage() {
           {/* Tiqets Style Carousel */}
           <TiqetsStyleCarousel 
             tours={multiDayTours} 
-            title="Experiencias de varios días"
+            
           />
         </div>
       </section>
@@ -660,12 +673,12 @@ export default function HomePage() {
             onCityChange={setSelectedFeaturedCity}
           />
 
-          <p className="text-center text-muted-foreground mb-12">Los tours más populares y mejor valorados</p>
+          
 
           {/* Tiqets Style Carousel */}
           <TiqetsStyleCarousel 
             tours={featuredTours} 
-            title="Tours más populares"
+            
           />
         </div>
       </section>

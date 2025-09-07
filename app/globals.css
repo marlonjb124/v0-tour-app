@@ -183,4 +183,21 @@
   .group-hover\:scale-102:hover {
     transform: scale(1.02);
   }
+  
+  /* Snap scroll utilities for mobile carousels */
+  .snap-x {
+    scroll-snap-type: x mandatory;
+  }
+  
+  .snap-center {
+    scroll-snap-align: center;
+  }
+  
+  .snap-mandatory {
+    scroll-snap-type: x mandatory;
+  }
+  
+  .snap-start {
+    scroll-snap-align: start;
+  }
 }
