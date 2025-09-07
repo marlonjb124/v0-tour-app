@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search, Star } from "lucide-react"
-import { TourFilters } from "@/components/tours-filters"
+import { FilterPopup } from "@/components/filter-popup"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
 import { useForceRefetch } from "@/lib/hooks/use-force-refetch"
@@ -122,9 +122,9 @@ export default function PeruOutPage() {
           </div>
 
           <div className="mb-8">
-            <TourFilters 
+            <FilterPopup 
               filters={filters}
-              setFilters={setFilters}
+              onFiltersChange={setFilters}
               cities={cities}
             />
           </div>

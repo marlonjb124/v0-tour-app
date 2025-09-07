@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Search, Star, Ticket } from "lucide-react"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
-import { TicketFilters } from "@/components/tickets-filters"
+import { FilterPopup } from "@/components/filter-popup"
 import { useForceRefetch } from "@/lib/hooks/use-force-refetch"
 
 export default function TicketsPage() {
@@ -107,11 +107,11 @@ export default function TicketsPage() {
       <section className="py-12 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
-            <TicketFilters 
+            <FilterPopup 
               filters={filters} 
-              setFilters={setFilters} 
+              onFiltersChange={setFilters} 
               cities={cities} 
-              categories={categories} 
+              categories={categories}
             />
           </div>
 
