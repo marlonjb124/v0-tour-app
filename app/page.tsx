@@ -8,11 +8,13 @@ import { Card, CardContent } from "@/components/ui/card"
 import { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import Link from "next/link"
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query"
-import { TourService, Tour } from "@/services/tour-service"
+import { TourExcelService } from "@/services/tour-excel-service"
+import { TourExcel } from "@/lib/types-excel"
 import { toast } from "sonner"
 import useEmblaCarousel from 'embla-carousel-react'
 import Autoplay from 'embla-carousel-autoplay'
 import { useForceRefetch } from "@/lib/hooks/use-force-refetch"
+import { TiqetsCard } from "@/components/tiqets-card"
 
 // Componente para el filtro de ciudades horizontal con navegación
 const CityFilterGrid = ({ cities, cityImages, selectedCity, onCityChange }: {
@@ -73,7 +75,7 @@ const CityFilterGrid = ({ cities, cityImages, selectedCity, onCityChange }: {
       {/* Contenedor de filtros */}
       <div 
         ref={scrollContainerRef}
-        className="overflow-x-auto scrollbar-hide px-8"
+        className="overflow-x-auto scrollbar-hide px-6"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         <div className="flex gap-3 pb-2">
@@ -144,7 +146,7 @@ const CityFilterGrid = ({ cities, cityImages, selectedCity, onCityChange }: {
 };
 
 // Componente de carrusel estilo Tiqets
-const TiqetsStyleCarousel = ({ tours}: { tours: Tour[]}) => {
+const TiqetsStyleCarousel = ({ tours}: { tours: TourExcel[]}) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -261,80 +263,7 @@ const TiqetsStyleCarousel = ({ tours}: { tours: Tour[]}) => {
   );
 };
 
-// Componente de carta individual estilo Tiqets
-const TiqetsCard = ({ tour }: { tour: Tour }) => {
-  return (
-    <Link href={`/tour/${tour.id}`} className="block">
-      <div className="group cursor-pointer transition-all duration-300 hover:shadow-lg border border-gray-200 rounded-lg bg-white flex-shrink-0 w-full h-[350px] overflow-hidden flex flex-col">
-        {/* Imagen */}
-        <div className="relative h-44 overflow-hidden">
-          <img
-            src={(() => {
-              if (Array.isArray(tour.images) && tour.images.length > 0) {
-                return String(tour.images[0]);
-              }
-              return "/placeholder.svg";
-            })()}
-            alt={tour.title}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-          
-          {/* Badge de descuento */}
-          {tour.discount_percentage && (
-            <div className="absolute top-3 left-3">
-              <div className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-md">
-                HASTA -{tour.discount_percentage} %
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Contenido */}
-        <div className="p-4 flex flex-col justify-between h-[210px]">
-          <div className="space-y-2">
-            {/* Ciudad */}
-            <div className="text-xs text-gray-500 uppercase font-medium tracking-wide">
-              {tour.city}
-            </div>
-
-            {/* Título */}
-            <h3 className="font-bold text-lg leading-tight text-gray-900 line-clamp-2">
-              {tour.title}
-            </h3>
-
-            {/* Descripción */}
-            <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">
-              {tour.description}
-            </p>
-          </div>
-
-          {/* Footer con rating y precio */}
-          <div className="flex items-end justify-between pt-4">
-            {/* Rating y reviews */}
-            <div className="flex items-center gap-1">
-              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm font-semibold text-gray-900">{tour.rating}</span>
-              <span className="text-sm text-gray-500">({tour.review_count || 0})</span>
-            </div>
-
-            {/* Precio */}
-            <div className="text-right">
-              <div className="text-xs text-gray-500 mb-1">Desde</div>
-              <div className="text-lg font-bold text-gray-900">
-                {tour.original_price && tour.original_price > tour.price && (
-                  <span className="text-sm text-gray-400 line-through mr-2">
-                    ${tour.original_price.toFixed(2)}
-                  </span>
-                )}
-                {tour.price.toFixed(2)} US$
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-};
+// Componente de carta individual estilo Tiqets (ahora importado)
 
 const FeatureCardsCarousel = () => {
   const [emblaRef] = useEmblaCarousel({
@@ -431,7 +360,7 @@ export default function HomePage() {
   // Fetch cities
   const { data: cities = [] } = useQuery({
     queryKey: ['cities'],
-    queryFn: TourService.getCities,
+    queryFn: TourExcelService.getLocations,
     refetchOnWindowFocus: true,
   })
 
@@ -445,10 +374,9 @@ export default function HomePage() {
     isFetchingNextPage
   } = useInfiniteQuery({
     queryKey: ['tours-infinite', selectedCity, searchTerm],
-    queryFn: ({ pageParam = 1 }) => TourService.getTours({
-      city: selectedCity || undefined,
+    queryFn: ({ pageParam = 1 }) => TourExcelService.getTours({
+      location: selectedCity || undefined,
       search: searchTerm || undefined,
-      is_active: true,
     }, pageParam, 6),
     initialPageParam: 1,
     getNextPageParam: (lastPage, allPages) => {
@@ -458,18 +386,20 @@ export default function HomePage() {
   })
 
   // Fetch featured tours
-  const { data: featuredTours = [] } = useQuery({
+  const { data: featuredToursData = { items: [] } } = useQuery({
     queryKey: ['featured-tours', selectedFeaturedCity],
-    queryFn: () => TourService.getFeaturedTours(6, selectedFeaturedCity || undefined),
+    queryFn: () => TourExcelService.getTours({ location: selectedFeaturedCity || undefined }, 1, 6),
     refetchOnWindowFocus: true,
   })
+  
+  const featuredTours = featuredToursData.items || []
 
   // Fetch one-day tours
   const { data: oneDayToursData = { items: [] } } = useQuery({
     queryKey: ['one-day-tours', selectedOneDayCity],
-    queryFn: () => TourService.getToursByCategory('one-day', { 
-      is_active: true,
-      city: selectedOneDayCity || undefined
+    queryFn: () => TourExcelService.getTours({ 
+      location: selectedOneDayCity || undefined,
+      tipo_tour: 'Half day'
     }, 1, 8),
     refetchOnWindowFocus: true,
   })
@@ -477,9 +407,9 @@ export default function HomePage() {
   // Fetch multi-day tours
   const { data: multiDayToursData = { items: [] } } = useQuery({
     queryKey: ['multi-day-tours', selectedMultiDayCity],
-    queryFn: () => TourService.getToursByDuration(null, 2, { 
-      is_active: true,
-      city: selectedMultiDayCity || undefined
+    queryFn: () => TourExcelService.getTours({
+      location: selectedMultiDayCity || undefined,
+      tipo_tour: 'Multi day'
     }, 1, 8),
     refetchOnWindowFocus: true,
   })

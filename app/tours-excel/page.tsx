@@ -1,35 +1,18 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { TourExcelService } from "@/services/tour-excel-service"
-import { TourExcel } from "@/lib/types-excel"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Search, Star } from "lucide-react"
-import { FilterPopup } from "@/components/filter-popup"
+import { ToursExcelFilters } from "@/components/tours-excel-filters"
 import { TiqetsCard } from "@/components/tiqets-card"
-import Link from "next/link"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Search } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
+import { TourExcelFilters as TourExcelFiltersType } from "@/lib/types-excel"
 import { useForceRefetch } from "@/lib/hooks/use-force-refetch"
 
-interface TourFilters {
-  location?: string;
-  search?: string;
-  tipo_tour?: string;
-  min_price?: number;
-  max_price?: number;
-}
-
-export default function PeruInPage() {
-  const [filters, setFilters] = useState<TourFilters>({
-    location: "",
-    search: "",
-    tipo_tour: "",
-    min_price: undefined,
-    max_price: undefined,
-  });
+export default function ToursExcelPage() {
+  const [filters, setFilters] = useState<TourExcelFiltersType>({})
   const [searchInput, setSearchInput] = useState<string>("")
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 15
@@ -37,31 +20,55 @@ export default function PeruInPage() {
   // Forzar refetch en cada acceso a la página
   useForceRefetch()
 
-  // Fetch domestic tours with pagination
+  // Fetch tours con estructura Excel
   const {
     data: toursData,
     isLoading,
     error,
     refetch
   } = useQuery({
-    queryKey: ['tours-excel', 'domestic', filters, currentPage],
+    queryKey: ['tours-excel', filters, currentPage],
     queryFn: () => TourExcelService.getTours(filters, currentPage, itemsPerPage),
     retry: 3,
     refetchOnWindowFocus: true,
   })
 
-  // Fetch cities for domestic tours
-  const { data: cities = [] } = useQuery({
+  // Fetch datos para filtros
+  const { data: locations = [] } = useQuery({
     queryKey: ['excel-locations'],
     queryFn: TourExcelService.getLocations,
     refetchOnWindowFocus: true,
-  });
+  })
+
+  const { data: countries = [] } = useQuery({
+    queryKey: ['excel-countries'],
+    queryFn: TourExcelService.getCountries,
+    refetchOnWindowFocus: true,
+  })
+
+  const { data: tourTypes = [] } = useQuery({
+    queryKey: ['excel-tour-types'],
+    queryFn: TourExcelService.getTourTypes,
+    refetchOnWindowFocus: true,
+  })
+
+  const { data: languages = [] } = useQuery({
+    queryKey: ['excel-languages'],
+    queryFn: TourExcelService.getLanguages,
+    refetchOnWindowFocus: true,
+  })
+
+  const { data: priceStats } = useQuery({
+    queryKey: ['excel-price-stats'],
+    queryFn: TourExcelService.getPriceStats,
+    refetchOnWindowFocus: true,
+  })
 
   const tours = toursData?.items || []
   const totalTours = toursData?.total || 0
 
   const handleSearch = () => {
-    setFilters((prev: TourFilters) => ({ ...prev, search: searchInput.trim() }));
+    setFilters((prev) => ({ ...prev, search: searchInput.trim() }))
     setCurrentPage(1); // Reset to first page when searching
   }
 
@@ -76,27 +83,23 @@ export default function PeruInPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  const totalPages = Math.ceil(totalTours / itemsPerPage)
+  const totalPages = Math.ceil((toursData?.total || 0) / itemsPerPage)
 
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative h-[400px] flex items-center justify-center overflow-hidden">
-        {/* Background Image - Peruvian landscape */}
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: `url('/machu-picchu-sunrise-andes-mountains-peru.png')`,
-          }}
-        >
+        <div className="absolute inset-0 bg-cover bg-center bg-no-repeat" 
+             style={{ backgroundImage: `url('/machu-picchu-sunrise-andes-mountains-peru.png')` }}>
           <div className="absolute inset-0 bg-black/40" />
         </div>
-
-        {/* Hero Content */}
+        
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 font-sans">Tours en Perú</h1>
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 font-sans">
+            Tours con Estructura Excel
+          </h1>
           <p className="text-lg md:text-xl mb-8 opacity-90">
-            Explora los destinos más fascinantes del Perú con nuestros tours domésticos
+            Explora nuestros tours con la estructura exacta del archivo Excel de Camila
           </p>
 
           {/* Search Bar */}
@@ -105,7 +108,7 @@ export default function PeruInPage() {
               <Search className="ml-4 h-5 w-5 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Buscar tours en Perú"
+                placeholder="Buscar tours por título, highlights o programa"
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -126,17 +129,21 @@ export default function PeruInPage() {
       <section className="py-12 px-6 md:px-6">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold">Tours en Perú</h2>
+            <h2 className="text-2xl md:text-3xl font-bold">Tours con Estructura Excel</h2>
             <p className="text-muted-foreground">
-              {totalTours} experiencias para descubrir en Perú
+              {totalTours} experiencias disponibles con datos exactos del Excel
             </p>
           </div>
 
           <div className="mb-8">
-            <FilterPopup 
+            <ToursExcelFilters 
               filters={filters}
               onFiltersChange={setFilters}
-              cities={cities}
+              locations={locations}
+              countries={countries}
+              tourTypes={tourTypes}
+              languages={languages}
+              priceStats={priceStats}
             />
           </div>
 
@@ -158,23 +165,12 @@ export default function PeruInPage() {
           ) : tours.length === 0 ? (
             <div className="text-center py-20">
               <h3 className="text-xl font-medium mb-2">No se encontraron tours</h3>
-              <p className="text-muted-foreground mb-4">
-                {filters.city || filters.search 
-                  ? "No hay tours disponibles con los filtros seleccionados."
-                  : "No hay tours domésticos disponibles en este momento."
-                }
+              <p className="text-muted-foreground">
+                Intenta ajustar los filtros o realizar una nueva búsqueda.
               </p>
-              {(filters.city || filters.search) && (
-                <Button onClick={() => {
-                  setFilters((prev: TourFiltersType) => ({ ...prev, city: '', search: '' }));
-                  setSearchInput("");
-                }}>
-                  Limpiar filtros
-                </Button>
-              )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 px-1 md:px-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 px-1 md:px-0">
               {tours.map((tour) => (
                 <TiqetsCard key={tour.id} tour={tour} />
               ))}
@@ -239,3 +235,4 @@ export default function PeruInPage() {
     </div>
   )
 }
+

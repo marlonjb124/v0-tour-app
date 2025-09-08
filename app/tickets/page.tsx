@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { TourService, TourFilters } from "@/services/tour-service"
+import { TourExcelService } from "@/services/tour-excel-service"
+import { TourExcel } from "@/lib/types-excel"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -10,39 +11,50 @@ import { Search, Star, Ticket } from "lucide-react"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
 import { FilterPopup } from "@/components/filter-popup"
+import { TiqetsCard } from "@/components/tiqets-card"
 import { useForceRefetch } from "@/lib/hooks/use-force-refetch"
+
+interface TourFilters {
+  location?: string;
+  search?: string;
+  tipo_tour?: string;
+  min_price?: number;
+  max_price?: number;
+}
 
 export default function TicketsPage() {
   const [filters, setFilters] = useState<TourFilters>({})
   const [searchInput, setSearchInput] = useState<string>("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 15
 
   // Forzar refetch en cada acceso a la página
   useForceRefetch()
 
-  // Fetch tickets
+  // Fetch tickets with pagination
   const {
     data: ticketsData,
     isLoading,
     error,
     refetch
   } = useQuery({
-    queryKey: ['tickets', filters],
-    queryFn: () => TourService.getTickets(filters, 1, 24),
+    queryKey: ['tickets-excel', filters, currentPage],
+    queryFn: () => TourExcelService.getTours(filters, currentPage, itemsPerPage),
     retry: 3,
     refetchOnWindowFocus: true,
   })
 
   // Fetch cities for filters
   const { data: cities = [] } = useQuery({
-    queryKey: ['ticket-cities'],
-    queryFn: TourService.getCities, // Re-using existing service method
+    queryKey: ['excel-locations'],
+    queryFn: TourExcelService.getLocations,
     refetchOnWindowFocus: true,
   });
 
   // Fetch categories for filters
   const { data: categories = [] } = useQuery({
-    queryKey: ['ticket-categories'],
-    queryFn: TourService.getTicketCategories,
+    queryKey: ['excel-categories'],
+    queryFn: TourExcelService.getCategories,
     refetchOnWindowFocus: true,
   });
 
@@ -51,6 +63,7 @@ export default function TicketsPage() {
 
   const handleSearch = () => {
     setFilters(prev => ({ ...prev, search: searchInput.trim() }))
+    setCurrentPage(1); // Reset to first page when searching
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -58,6 +71,13 @@ export default function TicketsPage() {
       handleSearch()
     }
   }
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  const totalPages = Math.ceil(totalTickets / itemsPerPage)
 
   return (
     <div className="min-h-screen">
@@ -104,7 +124,7 @@ export default function TicketsPage() {
       </section>
 
       {/* Content Section */}
-      <section className="py-12 px-4">
+      <section className="py-12 px-6 md:px-6">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
             <FilterPopup 
@@ -149,68 +169,66 @@ export default function TicketsPage() {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 px-1 md:px-0">
               {tickets.map((ticket) => (
-                <Link key={ticket.id} href={`/tours/${ticket.id}`}>
-                  <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow">
-                    <div className="relative h-48">
-                      <img
-                        src={(() => {
-                          if (Array.isArray(ticket.images) && ticket.images.length > 0) {
-                            return String(ticket.images[0])
-                          }
-                          return "/placeholder.svg"
-                        })()}
-                        alt={ticket.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <Badge className="absolute top-2 left-2 bg-green-500 text-white">
-                        <Ticket className="h-3 w-3 mr-1" /> Solo Ticket
-                      </Badge>
-                      {ticket.discount_percentage && (
-                        <Badge className="absolute top-2 right-2 bg-red-500 text-white">
-                          -{ticket.discount_percentage}%
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <CardContent className="p-4">
-                      <div className="mb-2">
-                        <Badge variant="secondary" className="text-xs font-medium">
-                          {ticket.city}
-                        </Badge>
-                      </div>
-                      
-                      <h3 className="font-semibold text-lg mb-2 line-clamp-2">
-                        {ticket.title}
-                      </h3>
-                      
-                      <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                        {ticket.description}
-                      </p>
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="font-medium text-sm">{ticket.rating}</span>
-                          <span className="text-muted-foreground text-xs">
-                            ({ticket.review_count})
-                          </span>
-                        </div>
-                        
-                        <div className="text-right">
-                          <div className="text-xs text-muted-foreground">Precio</div>
-                          <div className="font-bold text-lg text-primary">
-                            ${ticket.price.toFixed(2)}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </Link>
+                <TiqetsCard key={ticket.id} tour={ticket} />
               ))}
             </div>
           )}
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center mt-12 space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-2"
+              >
+                Anterior
+              </Button>
+              
+              <div className="flex space-x-1">
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNumber;
+                  if (totalPages <= 5) {
+                    pageNumber = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNumber = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNumber = totalPages - 4 + i;
+                  } else {
+                    pageNumber = currentPage - 2 + i;
+                  }
+                  
+                  return (
+                    <Button
+                      key={pageNumber}
+                      variant={currentPage === pageNumber ? "default" : "outline"}
+                      onClick={() => handlePageChange(pageNumber)}
+                      className="px-3 py-2 min-w-[40px]"
+                    >
+                      {pageNumber}
+                    </Button>
+                  );
+                })}
+              </div>
+              
+              <Button
+                variant="outline"
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2"
+              >
+                Siguiente
+              </Button>
+            </div>
+          )}
+          
+          {/* Pagination Info */}
+          <div className="text-center mt-4 text-sm text-muted-foreground">
+            Mostrando {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, totalTickets)} de {totalTickets} tickets
+          </div>
         </div>
       </section>
     </div>
