@@ -12,6 +12,15 @@ interface TiqetsCardProps {
 export const TiqetsCard = ({ tour, href }: TiqetsCardProps) => {
   const cardHref = href || `/tour-excel/${tour.id}`
   
+  // Función para formatear duración
+  const formatDuration = (hours: number) => {
+    if (hours <= 4) return `${hours}h`
+    if (hours <= 8) return 'Medio día'
+    if (hours <= 12) return 'Día completo'
+    if (hours <= 24) return '1 día'
+    return `${Math.ceil(hours / 24)} días`
+  }
+  
   return (
     <Link href={cardHref} className="block">
       <div className="group cursor-pointer transition-all duration-300 hover:shadow-lg border border-gray-200 rounded-lg bg-white flex-shrink-0 w-full h-[400px] overflow-hidden flex flex-col">
@@ -55,7 +64,7 @@ export const TiqetsCard = ({ tour, href }: TiqetsCardProps) => {
             {/* Duración */}
             <div className="flex items-center gap-1">
               <Clock className="h-4 w-4 text-gray-500" />
-              <span className="text-sm font-semibold text-gray-900">{tour.durations_hours}h</span>
+              <span className="text-sm font-semibold text-gray-900">{formatDuration(tour.durations_hours)}</span>
             </div>
 
             {/* Precio */}

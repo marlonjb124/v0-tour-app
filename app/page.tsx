@@ -13,7 +13,7 @@ import { TourExcel } from "@/lib/types-excel"
 import { toast } from "sonner"
 import useEmblaCarousel from 'embla-carousel-react'
 import Autoplay from 'embla-carousel-autoplay'
-import { useForceRefetch } from "@/lib/hooks/use-force-refetch"
+import { useForceAllFetch } from "@/lib/hooks/use-force-all-fetch"
 import { TiqetsCard } from "@/components/tiqets-card"
 
 // Componente para el filtro de ciudades horizontal con navegación
@@ -354,8 +354,8 @@ export default function HomePage() {
   const [searchTerm, setSearchTerm] = useState<string>("") 
   const [searchInput, setSearchInput] = useState<string>("")
 
-  // Forzar refetch en cada acceso a la página
-  useForceRefetch()
+  // Forzar TODOS los fetch cada vez que se navega a esta página
+  useForceAllFetch()
 
   // Fetch cities
   const { data: cities = [] } = useQuery({

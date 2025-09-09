@@ -11,7 +11,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useQuery } from '@tanstack/react-query'
 import 'leaflet/dist/leaflet.css';
-import { useForceRefetch } from '@/lib/hooks/use-force-refetch'
+import { useForceAllFetch } from '@/lib/hooks/use-force-all-fetch'
 
 export default function MapaInteractivoPage() {
   const [selectedTour, setSelectedTour] = useState<Tour | null>(null);
@@ -20,8 +20,8 @@ export default function MapaInteractivoPage() {
   const [client, setClient] = useState(false);
   const [showMobileList, setShowMobileList] = useState(false);
 
-  // Forzar refetch en cada acceso a la página
-  useForceRefetch()
+  // Forzar TODOS los fetch cada vez que se navega a esta página
+  useForceAllFetch()
 
   // Dynamically import the Map component to avoid SSR issues with Leaflet
   const Map = dynamic(() => import('@/components/map'), { ssr: false });

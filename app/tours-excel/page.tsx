@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Search } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { TourExcelFilters as TourExcelFiltersType } from "@/lib/types-excel"
-import { useNavigationFetch } from "@/lib/hooks/use-navigation-fetch"
+import { useForceAllFetch } from "@/lib/hooks/use-force-all-fetch"
 
 export default function ToursExcelPage() {
   const [filters, setFilters] = useState<TourExcelFiltersType>({})
@@ -17,8 +17,8 @@ export default function ToursExcelPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 15
 
-  // Manejar fetch basado en tipo de navegación
-  useNavigationFetch()
+  // Forzar TODOS los fetch cada vez que se navega a esta página
+  useForceAllFetch()
 
   // Fetch tours con estructura Excel
   const {

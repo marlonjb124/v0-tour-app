@@ -13,10 +13,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       defaultOptions: {
         queries: {
           staleTime: 0, // Always consider data stale for fresh fetches
-          cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
-          refetchOnWindowFocus: false, // Don't refetch on window focus to avoid issues
-          refetchOnMount: true, // Always refetch on mount for fresh data
-          refetchOnReconnect: true,
+          cacheTime: 0, // No cache - always fetch fresh data
+          refetchOnWindowFocus: true, // Always refetch on window focus
+          refetchOnMount: true, // Always refetch on mount
+          refetchOnReconnect: true, // Always refetch on reconnect
           retryOnMount: true, // Retry failed queries on mount
           retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
           retry: (failureCount, error: any) => {

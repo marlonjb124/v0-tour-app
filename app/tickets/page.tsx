@@ -12,8 +12,8 @@ import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
 import { ToursExcelFilters } from "@/components/tours-excel-filters"
 import { TiqetsCard } from "@/components/tiqets-card"
-import { useNavigationFetch } from "@/lib/hooks/use-navigation-fetch"
 import { usePersistentFilters } from "@/lib/hooks/use-persistent-filters"
+import { useForceAllFetch } from "@/lib/hooks/use-force-all-fetch"
 import { TourExcelFilters } from "@/lib/types-excel"
 
 export default function TicketsPage() {
@@ -21,14 +21,14 @@ export default function TicketsPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 15
 
-  // Manejar fetch basado en tipo de navegación
-  useNavigationFetch()
+  // Forzar TODOS los fetch cada vez que se navega a esta página
+  useForceAllFetch()
 
   // Filtros persistentes
   const { filters, hasAppliedFilters, updateFilters, clearFilters } = usePersistentFilters({
     search: "",
     min_duration_hours: 1,
-    max_duration_hours: 24,
+    max_duration_hours: 384, // 16 días = 384 horas (máximo en BD)
   })
 
   // Fetch filter options

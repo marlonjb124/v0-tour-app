@@ -46,7 +46,7 @@ export function ToursExcelFilters({
     if (typeof value === 'number') {
       // For duration filters, only count if they're different from default values
       if (key === 'min_duration_hours') return value !== 1
-      if (key === 'max_duration_hours') return value !== 24
+      if (key === 'max_duration_hours') return value !== 384 // 16 días = 384 horas (máximo en BD)
       return value > 0
     }
     return value !== undefined && value !== null
@@ -95,7 +95,7 @@ export function ToursExcelFilters({
     const clearedFilters: TourExcelFilters = {
       search: filters.search || '', // Preserve search
       min_duration_hours: 1,
-      max_duration_hours: 24,
+      max_duration_hours: 384, // 16 días = 384 horas (máximo en BD)
     }
     setLocalFilters(clearedFilters)
     onFiltersChange(clearedFilters)
@@ -279,19 +279,29 @@ export function ToursExcelFilters({
           {/* Duración */}
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <h4 className="font-medium text-sm text-gray-900">Duración (horas)</h4>
+              <h4 className="font-medium text-sm text-gray-900">Duración</h4>
               <span className="text-xs text-gray-500">
-                {localFilters.min_duration_hours ?? 1} - {localFilters.max_duration_hours ?? 24}h
+                {localFilters.min_duration_hours ?? 1}h - {localFilters.max_duration_hours ?? 384}h
+                {localFilters.max_duration_hours && localFilters.max_duration_hours > 24 && (
+                  <span className="ml-1">({Math.ceil((localFilters.max_duration_hours ?? 384) / 24)} días)</span>
+                )}
               </span>
             </div>
             <Slider
-              value={[localFilters.min_duration_hours ?? 1, localFilters.max_duration_hours ?? 24]}
+              value={[localFilters.min_duration_hours ?? 1, localFilters.max_duration_hours ?? 384]}
               onValueChange={(newValues) => handleRangeChange('min_duration_hours', newValues)}
-              max={24}
+              max={384} // 16 días = 384 horas (máximo en BD)
               min={1}
               step={1}
               className="w-full"
             />
+            <div className="flex justify-between text-xs text-gray-400">
+              <span>1h</span>
+              <span>24h (1 día)</span>
+              <span>72h (3 días)</span>
+              <span>168h (7 días)</span>
+              <span>384h (16 días)</span>
+            </div>
           </div>
         </div>
         

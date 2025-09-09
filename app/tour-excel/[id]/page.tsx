@@ -3,7 +3,7 @@
 import { useParams } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import { TourExcelService } from "@/services/tour-excel-service"
-import { useForceRefetch } from "@/lib/hooks/use-force-refetch"
+import { useForceAllFetch } from "@/lib/hooks/use-force-all-fetch"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,8 +15,8 @@ export default function TourExcelDetailPage() {
   const params = useParams()
   const tourId = params.id as string
 
-  // Forzar refetch en cada acceso a la página
-  useForceRefetch()
+  // Forzar TODOS los fetch cada vez que se navega a esta página
+  useForceAllFetch()
 
   const {
     data: tour,

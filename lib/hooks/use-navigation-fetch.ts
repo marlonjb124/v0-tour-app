@@ -4,25 +4,32 @@ import { usePathname } from 'next/navigation'
 
 /**
  * Hook que maneja el fetch basado en el tipo de navegación:
- * - Navegación fresca (click en header, URL directa) → FETCH FRESCO
- * - Regreso de navegación (botón atrás) → MANTENER estado actual
+ * - Siempre hacer fetch fresco al cambiar de ruta
+ * - Detectar navegación del navegador (botones atrás/adelante)
  */
 export function useNavigationFetch() {
   const queryClient = useQueryClient()
   const pathname = usePathname()
   const previousPathname = useRef<string | null>(null)
   const isInitialLoad = useRef(true)
-  const navigationHistory = useRef<string[]>([])
+  const isBrowserNavigation = useRef(false)
 
   useEffect(() => {
-    // Detectar si es navegación fresca o regreso
-    const isFreshNavigation = isInitialLoad.current || 
-      !navigationHistory.current.includes(pathname) ||
-      navigationHistory.current[navigationHistory.current.length - 1] !== pathname
+    // Detectar si es navegación del navegador (popstate)
+    const handlePopState = () => {
+      isBrowserNavigation.current = true
+    }
 
-    if (isFreshNavigation) {
-      // Navegación fresca - hacer fetch fresco
-      console.log('🔄 Fresh navigation detected, invalidating queries for:', pathname)
+    // Agregar listener para detectar navegación del navegador
+    window.addEventListener('popstate', handlePopState)
+
+    // Siempre invalidar queries al cambiar de ruta
+    const isRouteChange = previousPathname.current !== pathname
+    const shouldInvalidate = isInitialLoad.current || isRouteChange
+
+    if (shouldInvalidate) {
+      const navigationType = isBrowserNavigation.current ? 'browser' : 'fresh'
+      console.log(`🔄 ${navigationType} navigation detected, invalidating queries for:`, pathname)
       
       // Invalidar queries específicas para la página actual
       if (pathname.includes('/peru-in')) {
@@ -45,23 +52,33 @@ export function useNavigationFetch() {
           queryKey: ['tours-excel', 'all'],
           exact: false
         })
+      } else if (pathname.includes('/tour-excel/')) {
+        queryClient.invalidateQueries({ 
+          queryKey: ['tour-excel'],
+          exact: false
+        })
       }
-    } else {
-      console.log('↩️ Back navigation detected, keeping current state for:', pathname)
-    }
 
-    // Actualizar historial de navegación
-    if (isFreshNavigation) {
-      navigationHistory.current.push(pathname)
-      // Mantener solo los últimos 10 elementos
-      if (navigationHistory.current.length > 10) {
-        navigationHistory.current = navigationHistory.current.slice(-10)
-      }
+      // Invalidar queries de datos auxiliares
+      queryClient.invalidateQueries({ queryKey: ['cities'] })
+      queryClient.invalidateQueries({ queryKey: ['tours-excel-locations'] })
+      queryClient.invalidateQueries({ queryKey: ['tours-excel-countries'] })
+      queryClient.invalidateQueries({ queryKey: ['tours-excel-types'] })
+      queryClient.invalidateQueries({ queryKey: ['tours-excel-languages'] })
+      queryClient.invalidateQueries({ queryKey: ['tours-excel-price-stats'] })
+
+      // Reset browser navigation flag
+      isBrowserNavigation.current = false
     }
 
     // Actualizar referencias
     previousPathname.current = pathname
     isInitialLoad.current = false
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('popstate', handlePopState)
+    }
   }, [pathname, queryClient])
 }
 
