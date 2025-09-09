@@ -31,8 +31,12 @@ export class TourExcelService {
       query = query.eq('tipo_tour', filters.tipo_tour)
     }
 
-    if (filters.durations_hours) {
-      query = query.eq('durations_hours', filters.durations_hours)
+    if (filters.min_duration_hours !== undefined) {
+      query = query.gte('durations_hours', filters.min_duration_hours)
+    }
+
+    if (filters.max_duration_hours !== undefined) {
+      query = query.lte('durations_hours', filters.max_duration_hours)
     }
 
     if (filters.languages) {
@@ -62,11 +66,24 @@ export class TourExcelService {
     const { data, error, count } = await query
 
     if (error) {
+      console.error('Supabase error:', error)
       throw new Error(`Error fetching tours: ${error.message}`)
     }
 
+    // Validar que los datos sean válidos
+    if (!data) {
+      console.warn('No data returned from Supabase')
+      return {
+        items: [],
+        total: 0,
+        page,
+        size,
+        totalPages: 0
+      }
+    }
+
     return {
-      items: data || [],
+      items: data,
       total: count || 0,
       page,
       size,

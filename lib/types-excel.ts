@@ -32,6 +32,8 @@ export interface TourExcelFilters {
   location?: string;
   tipo_tour?: string;
   durations_hours?: number;
+  min_duration_hours?: number;
+  max_duration_hours?: number;
   languages?: string;
   adult_min?: number;
   adult_max?: number;

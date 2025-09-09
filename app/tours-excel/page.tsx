@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Search } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { TourExcelFilters as TourExcelFiltersType } from "@/lib/types-excel"
-import { useForceRefetch } from "@/lib/hooks/use-force-refetch"
+import { useNavigationFetch } from "@/lib/hooks/use-navigation-fetch"
 
 export default function ToursExcelPage() {
   const [filters, setFilters] = useState<TourExcelFiltersType>({})
@@ -17,8 +17,8 @@ export default function ToursExcelPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 15
 
-  // Forzar refetch en cada acceso a la página
-  useForceRefetch()
+  // Manejar fetch basado en tipo de navegación
+  useNavigationFetch()
 
   // Fetch tours con estructura Excel
   const {
@@ -27,41 +27,35 @@ export default function ToursExcelPage() {
     error,
     refetch
   } = useQuery({
-    queryKey: ['tours-excel', filters, currentPage],
+    queryKey: ['tours-excel', 'all', filters, currentPage],
     queryFn: () => TourExcelService.getTours(filters, currentPage, itemsPerPage),
     retry: 3,
-    refetchOnWindowFocus: true,
   })
 
   // Fetch datos para filtros
   const { data: locations = [] } = useQuery({
-    queryKey: ['excel-locations'],
+    queryKey: ['tours-excel-locations'],
     queryFn: TourExcelService.getLocations,
-    refetchOnWindowFocus: true,
   })
 
   const { data: countries = [] } = useQuery({
-    queryKey: ['excel-countries'],
+    queryKey: ['tours-excel-countries'],
     queryFn: TourExcelService.getCountries,
-    refetchOnWindowFocus: true,
   })
 
   const { data: tourTypes = [] } = useQuery({
-    queryKey: ['excel-tour-types'],
+    queryKey: ['tours-excel-types'],
     queryFn: TourExcelService.getTourTypes,
-    refetchOnWindowFocus: true,
   })
 
   const { data: languages = [] } = useQuery({
-    queryKey: ['excel-languages'],
+    queryKey: ['tours-excel-languages'],
     queryFn: TourExcelService.getLanguages,
-    refetchOnWindowFocus: true,
   })
 
   const { data: priceStats } = useQuery({
-    queryKey: ['excel-price-stats'],
+    queryKey: ['tours-excel-price-stats'],
     queryFn: TourExcelService.getPriceStats,
-    refetchOnWindowFocus: true,
   })
 
   const tours = toursData?.items || []

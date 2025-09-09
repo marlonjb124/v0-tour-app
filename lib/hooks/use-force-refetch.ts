@@ -1,16 +1,24 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 
 /**
- * Hook que fuerza el refetch de todas las queries al montar el componente
- * Esto asegura que siempre se ejecuten fetch frescos al acceder a las páginas
+ * Hook que fuerza el refetch de queries específicas al montar el componente
+ * Esto asegura que se ejecuten fetch frescos solo cuando sea necesario
  */
 export function useForceRefetch() {
   const queryClient = useQueryClient()
+  const hasRefetched = useRef(false)
 
   useEffect(() => {
-    // Invalidar todas las queries para forzar refetch
-    queryClient.invalidateQueries()
+    // Solo invalidar una vez por montaje del componente
+    if (!hasRefetched.current) {
+      // Invalidar solo las queries de tours para forzar refetch
+      queryClient.invalidateQueries({ 
+        queryKey: ['tours-excel'],
+        exact: false // Invalida todas las queries que empiecen con 'tours-excel'
+      })
+      hasRefetched.current = true
+    }
   }, [queryClient])
 }
 

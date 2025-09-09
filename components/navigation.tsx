@@ -18,11 +18,11 @@ export default function Navigation() {
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2">
             <Image
-              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ISOTIPO-jWZJH4MWlYyx4FUV2nZkZSXaAeX0uv.png"
+              src="/PERU TRAVEL LOGO.png"
               alt="Peru Travel Logo"
-              width={32}
-              height={32}
-              className="w-8 h-8"
+              width={120}
+              height={40}
+              className="w-auto h-8"
             />
 
           </Link>

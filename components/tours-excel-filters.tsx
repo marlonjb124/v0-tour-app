@@ -19,10 +19,10 @@ interface ToursExcelFiltersProps {
   tourTypes?: string[]
   languages?: string[]
   priceStats?: {
-    min_adult: number
-    max_adult: number
-    min_child: number
-    max_child: number
+    min_adult: number;
+    max_adult: number;
+    min_child: number;
+    max_child: number;
   }
 }
 
@@ -38,92 +38,51 @@ export function ToursExcelFilters({
   const [isOpen, setIsOpen] = useState(false)
   const [localFilters, setLocalFilters] = useState<TourExcelFilters>(filters)
 
-  // Contar filtros activos
-  const activeFiltersCount = Object.values(filters).filter(value => {
+  // Count active filters
+  const activeFiltersCount = Object.entries(filters).filter(([key, value]) => {
+    if (key === 'search') return false // Don't count search as a filter
     if (Array.isArray(value)) return value.length > 0
     if (typeof value === 'string') return value.trim() !== ''
-    if (typeof value === 'number') return value > 0
+    if (typeof value === 'number') {
+      // For duration filters, only count if they're different from default values
+      if (key === 'min_duration_hours') return value !== 1
+      if (key === 'max_duration_hours') return value !== 24
+      return value > 0
+    }
     return value !== undefined && value !== null
   }).length
 
-  const filterSections = [
-    {
-      id: 'countries',
-      title: 'Países',
-      type: 'checkbox' as const,
-      options: countries.map(country => ({ value: country, label: country }))
-    },
-    {
-      id: 'locations',
-      title: 'Ubicaciones',
-      type: 'checkbox' as const,
-      options: locations.map(location => ({ value: location, label: location }))
-    },
-    {
-      id: 'tourTypes',
-      title: 'Tipo de Tour',
-      type: 'checkbox' as const,
-      options: tourTypes.map(type => ({ value: type, label: type }))
-    },
-    {
-      id: 'languages',
-      title: 'Idiomas',
-      type: 'checkbox' as const,
-      options: languages.map(lang => ({ value: lang, label: lang }))
-    },
-    {
-      id: 'adultPrice',
-      title: 'Precio Adulto (USD)',
-      type: 'range' as const,
-      min: priceStats?.min_adult || 0,
-      max: priceStats?.max_adult || 1000,
-      step: 10
-    },
-    {
-      id: 'childPrice',
-      title: 'Precio Niño (USD)',
-      type: 'range' as const,
-      min: priceStats?.min_child || 0,
-      max: priceStats?.max_child || 500,
-      step: 5
-    },
-    {
-      id: 'duration',
-      title: 'Duración (horas)',
-      type: 'range' as const,
-      min: 1,
-      max: 24,
-      step: 1
-    }
-  ]
-
-  const handleCheckboxChange = (sectionId: string, value: string, checked: boolean) => {
-    if (sectionId === 'countries') {
-      setLocalFilters(prev => ({ ...prev, country: checked ? value : '' }))
-    } else if (sectionId === 'locations') {
-      setLocalFilters(prev => ({ ...prev, location: checked ? value : '' }))
-    } else if (sectionId === 'tourTypes') {
-      setLocalFilters(prev => ({ ...prev, tipo_tour: checked ? value : '' }))
-    } else if (sectionId === 'languages') {
-      setLocalFilters(prev => ({ ...prev, languages: checked ? value : '' }))
+  const handleCheckboxChange = (field: keyof TourExcelFilters, value: string, checked: boolean) => {
+    if (field === 'location') {
+      setLocalFilters(prev => ({ ...prev, location: checked ? value : undefined }))
+    } else if (field === 'country') {
+      setLocalFilters(prev => ({ ...prev, country: checked ? value : undefined }))
+    } else if (field === 'tipo_tour') {
+      setLocalFilters(prev => ({ ...prev, tipo_tour: checked ? value : undefined }))
+    } else if (field === 'languages') {
+      setLocalFilters(prev => ({ ...prev, languages: checked ? value : undefined }))
     }
   }
 
-  const handleRangeChange = (sectionId: string, values: number[]) => {
-    if (sectionId === 'adultPrice') {
+  const handleRangeChange = (field: keyof TourExcelFilters, values: number[]) => {
+    if (field === 'adult_min' || field === 'adult_max') {
       setLocalFilters(prev => ({
         ...prev,
         adult_min: values[0],
         adult_max: values[1]
       }))
-    } else if (sectionId === 'childPrice') {
+    } else if (field === 'child_min' || field === 'child_max') {
       setLocalFilters(prev => ({
         ...prev,
         child_min: values[0],
         child_max: values[1]
       }))
-    } else if (sectionId === 'duration') {
-      setLocalFilters(prev => ({ ...prev, durations_hours: values[0] }))
+    } else if (field === 'min_duration_hours' || field === 'max_duration_hours') {
+      setLocalFilters(prev => ({
+        ...prev,
+        min_duration_hours: values[0],
+        max_duration_hours: values[1]
+      }))
     }
   }
 
@@ -134,98 +93,13 @@ export function ToursExcelFilters({
 
   const clearFilters = () => {
     const clearedFilters: TourExcelFilters = {
-      country: '',
-      location: '',
-      tipo_tour: '',
-      languages: '',
-      durations_hours: undefined,
-      adult_min: undefined,
-      adult_max: undefined,
-      child_min: undefined,
-      child_max: undefined,
-      search: filters.search || '' // Preservar búsqueda
+      search: filters.search || '', // Preserve search
+      min_duration_hours: 1,
+      max_duration_hours: 24,
     }
     setLocalFilters(clearedFilters)
     onFiltersChange(clearedFilters)
     setIsOpen(false)
-  }
-
-  const renderSection = (section: any) => {
-    if (section.type === 'checkbox' && section.options) {
-      return (
-        <div className="space-y-3">
-          <h4 className="font-medium text-sm text-gray-900">{section.title}</h4>
-          <div className="space-y-2 max-h-32 overflow-y-auto">
-            {section.options.map((option: any) => {
-              let isChecked = false
-              
-              if (section.id === 'countries') {
-                isChecked = localFilters.country === option.value
-              } else if (section.id === 'locations') {
-                isChecked = localFilters.location === option.value
-              } else if (section.id === 'tourTypes') {
-                isChecked = localFilters.tipo_tour === option.value
-              } else if (section.id === 'languages') {
-                isChecked = localFilters.languages === option.value
-              }
-
-              return (
-                <div key={option.value} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`${section.id}-${option.value}`}
-                    checked={isChecked}
-                    onCheckedChange={(checked) => 
-                      handleCheckboxChange(section.id, option.value, checked as boolean)
-                    }
-                  />
-                  <Label 
-                    htmlFor={`${section.id}-${option.value}`}
-                    className="text-sm font-normal cursor-pointer"
-                  >
-                    {option.label}
-                  </Label>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )
-    }
-
-    if (section.type === 'range') {
-      let values: number[] = []
-      let displayText = ''
-
-      if (section.id === 'adultPrice') {
-        values = [localFilters.adult_min || section.min || 0, localFilters.adult_max || section.max || 1000]
-        displayText = `$${values[0]} - $${values[1]}`
-      } else if (section.id === 'childPrice') {
-        values = [localFilters.child_min || section.min || 0, localFilters.child_max || section.max || 500]
-        displayText = `$${values[0]} - $${values[1]}`
-      } else if (section.id === 'duration') {
-        values = [localFilters.durations_hours || section.min || 1]
-        displayText = `${values[0]} horas`
-      }
-
-      return (
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <h4 className="font-medium text-sm text-gray-900">{section.title}</h4>
-            <span className="text-xs text-gray-500">{displayText}</span>
-          </div>
-          <Slider
-            value={values}
-            onValueChange={(newValues) => handleRangeChange(section.id, newValues)}
-            max={section.max}
-            min={section.min}
-            step={section.step}
-            className="w-full"
-          />
-        </div>
-      )
-    }
-
-    return null
   }
 
   return (
@@ -233,7 +107,7 @@ export function ToursExcelFilters({
       <DialogTrigger asChild>
         <Button variant="outline" className="relative">
           <Filter className="h-4 w-4 mr-2" />
-          Filtros Excel
+          Filtros
           {activeFiltersCount > 0 && (
             <Badge variant="destructive" className="ml-2 px-1.5 py-0.5 text-xs">
               {activeFiltersCount}
@@ -245,7 +119,7 @@ export function ToursExcelFilters({
       <DialogContent className="max-w-md max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center justify-between">
-            Filtrar tours (Excel)
+            Filtrar resultados
             <Button 
               variant="ghost" 
               size="sm" 
@@ -258,11 +132,167 @@ export function ToursExcelFilters({
         </DialogHeader>
         
         <div className="flex-1 overflow-y-auto space-y-6 pr-2">
-          {filterSections.map(section => (
-            <div key={section.id}>
-              {renderSection(section)}
+          {/* Ubicaciones */}
+          {locations.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="font-medium text-sm text-gray-900">Ubicaciones</h4>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {locations.map(location => (
+                  <div key={location} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`location-${location}`}
+                      checked={localFilters.location === location}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange('location', location, checked as boolean)
+                      }
+                    />
+                    <Label 
+                      htmlFor={`location-${location}`}
+                      className="text-sm font-normal cursor-pointer"
+                    >
+                      {location}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
+          )}
+
+          {/* Países */}
+          {countries.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="font-medium text-sm text-gray-900">Países</h4>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {countries.map(country => (
+                  <div key={country} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`country-${country}`}
+                      checked={localFilters.country === country}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange('country', country, checked as boolean)
+                      }
+                    />
+                    <Label 
+                      htmlFor={`country-${country}`}
+                      className="text-sm font-normal cursor-pointer"
+                    >
+                      {country}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Tipos de Tour */}
+          {tourTypes.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="font-medium text-sm text-gray-900">Tipos de Tour</h4>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {tourTypes.map(type => (
+                  <div key={type} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`type-${type}`}
+                      checked={localFilters.tipo_tour === type}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange('tipo_tour', type, checked as boolean)
+                      }
+                    />
+                    <Label 
+                      htmlFor={`type-${type}`}
+                      className="text-sm font-normal cursor-pointer"
+                    >
+                      {type}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Idiomas */}
+          {languages.length > 0 && (
+            <div className="space-y-3">
+              <h4 className="font-medium text-sm text-gray-900">Idiomas</h4>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {languages.map(language => (
+                  <div key={language} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`language-${language}`}
+                      checked={localFilters.languages === language}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange('languages', language, checked as boolean)
+                      }
+                    />
+                    <Label 
+                      htmlFor={`language-${language}`}
+                      className="text-sm font-normal cursor-pointer"
+                    >
+                      {language}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Rango de Precio Adulto */}
+          {priceStats && (
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <h4 className="font-medium text-sm text-gray-900">Precio Adulto (USD)</h4>
+                <span className="text-xs text-gray-500">
+                  ${localFilters.adult_min || priceStats.min_adult} - ${localFilters.adult_max || priceStats.max_adult}
+                </span>
+              </div>
+              <Slider
+                value={[localFilters.adult_min || priceStats.min_adult, localFilters.adult_max || priceStats.max_adult]}
+                onValueChange={(newValues) => handleRangeChange('adult_min', newValues)}
+                max={priceStats.max_adult}
+                min={priceStats.min_adult}
+                step={10}
+                className="w-full"
+              />
+            </div>
+          )}
+
+          {/* Rango de Precio Niño */}
+          {priceStats && (
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <h4 className="font-medium text-sm text-gray-900">Precio Niño (USD)</h4>
+                <span className="text-xs text-gray-500">
+                  ${localFilters.child_min || priceStats.min_child} - ${localFilters.child_max || priceStats.max_child}
+                </span>
+              </div>
+              <Slider
+                value={[localFilters.child_min || priceStats.min_child, localFilters.child_max || priceStats.max_child]}
+                onValueChange={(newValues) => handleRangeChange('child_min', newValues)}
+                max={priceStats.max_child}
+                min={priceStats.min_child}
+                step={5}
+                className="w-full"
+              />
+            </div>
+          )}
+
+          {/* Duración */}
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
+              <h4 className="font-medium text-sm text-gray-900">Duración (horas)</h4>
+              <span className="text-xs text-gray-500">
+                {localFilters.min_duration_hours ?? 1} - {localFilters.max_duration_hours ?? 24}h
+              </span>
+            </div>
+            <Slider
+              value={[localFilters.min_duration_hours ?? 1, localFilters.max_duration_hours ?? 24]}
+              onValueChange={(newValues) => handleRangeChange('min_duration_hours', newValues)}
+              max={24}
+              min={1}
+              step={1}
+              className="w-full"
+            />
+          </div>
         </div>
         
         <div className="flex gap-2 pt-4 border-t">
@@ -277,4 +307,3 @@ export function ToursExcelFilters({
     </Dialog>
   )
 }
-

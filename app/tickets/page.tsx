@@ -10,26 +10,47 @@ import { Input } from "@/components/ui/input"
 import { Search, Star, Ticket } from "lucide-react"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
-import { FilterPopup } from "@/components/filter-popup"
+import { ToursExcelFilters } from "@/components/tours-excel-filters"
 import { TiqetsCard } from "@/components/tiqets-card"
-import { useForceRefetch } from "@/lib/hooks/use-force-refetch"
-
-interface TourFilters {
-  location?: string;
-  search?: string;
-  tipo_tour?: string;
-  min_price?: number;
-  max_price?: number;
-}
+import { useNavigationFetch } from "@/lib/hooks/use-navigation-fetch"
+import { usePersistentFilters } from "@/lib/hooks/use-persistent-filters"
+import { TourExcelFilters } from "@/lib/types-excel"
 
 export default function TicketsPage() {
-  const [filters, setFilters] = useState<TourFilters>({})
   const [searchInput, setSearchInput] = useState<string>("")
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 15
 
-  // Forzar refetch en cada acceso a la página
-  useForceRefetch()
+  // Manejar fetch basado en tipo de navegación
+  useNavigationFetch()
+
+  // Filtros persistentes
+  const { filters, hasAppliedFilters, updateFilters, clearFilters } = usePersistentFilters({
+    search: "",
+    min_duration_hours: 1,
+    max_duration_hours: 24,
+  })
+
+  // Fetch filter options
+  const { data: locations } = useQuery({
+    queryKey: ['tickets-excel-locations'],
+    queryFn: () => TourExcelService.getLocations(),
+  })
+
+  const { data: tourTypes } = useQuery({
+    queryKey: ['tickets-excel-types'],
+    queryFn: () => TourExcelService.getTourTypes(),
+  })
+
+  const { data: languages } = useQuery({
+    queryKey: ['tickets-excel-languages'],
+    queryFn: () => TourExcelService.getLanguages(),
+  })
+
+  const { data: priceStats } = useQuery({
+    queryKey: ['tickets-excel-price-stats'],
+    queryFn: () => TourExcelService.getPriceStats(),
+  })
 
   // Fetch tickets with pagination
   const {
@@ -38,31 +59,16 @@ export default function TicketsPage() {
     error,
     refetch
   } = useQuery({
-    queryKey: ['tickets-excel', filters, currentPage],
+    queryKey: ['tours-excel', 'tickets', filters, currentPage],
     queryFn: () => TourExcelService.getTours(filters, currentPage, itemsPerPage),
     retry: 3,
-    refetchOnWindowFocus: true,
   })
-
-  // Fetch cities for filters
-  const { data: cities = [] } = useQuery({
-    queryKey: ['excel-locations'],
-    queryFn: TourExcelService.getLocations,
-    refetchOnWindowFocus: true,
-  });
-
-  // Fetch categories for filters
-  const { data: categories = [] } = useQuery({
-    queryKey: ['excel-categories'],
-    queryFn: TourExcelService.getCategories,
-    refetchOnWindowFocus: true,
-  });
 
   const tickets = ticketsData?.items || []
   const totalTickets = ticketsData?.total || 0
 
   const handleSearch = () => {
-    setFilters(prev => ({ ...prev, search: searchInput.trim() }))
+    updateFilters({ ...filters, search: searchInput.trim() })
     setCurrentPage(1); // Reset to first page when searching
   }
 
@@ -127,11 +133,13 @@ export default function TicketsPage() {
       <section className="py-12 px-6 md:px-6">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
-            <FilterPopup 
-              filters={filters} 
-              onFiltersChange={setFilters} 
-              cities={cities} 
-              categories={categories}
+            <ToursExcelFilters 
+              filters={filters}
+              onFiltersChange={updateFilters} 
+              locations={locations}
+              tourTypes={tourTypes}
+              languages={languages}
+              priceStats={priceStats}
             />
           </div>
 

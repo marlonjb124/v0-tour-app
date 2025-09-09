@@ -8,34 +8,49 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search, Star } from "lucide-react"
-import { FilterPopup } from "@/components/filter-popup"
+import { ToursExcelFilters } from "@/components/tours-excel-filters"
 import { TiqetsCard } from "@/components/tiqets-card"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
-import { useForceRefetch } from "@/lib/hooks/use-force-refetch"
-
-interface TourFilters {
-  location?: string;
-  search?: string;
-  tipo_tour?: string;
-  min_price?: number;
-  max_price?: number;
-}
+import { useNavigationFetch } from "@/lib/hooks/use-navigation-fetch"
+import { usePersistentFilters } from "@/lib/hooks/use-persistent-filters"
+import { TourExcelFilters } from "@/lib/types-excel"
 
 export default function PeruOutPage() {
-  const [filters, setFilters] = useState<TourFilters>({
-    location: "",
-    search: "",
-    tipo_tour: "",
-    min_price: undefined,
-    max_price: undefined,
-  });
   const [searchInput, setSearchInput] = useState<string>("")
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 15
 
-  // Forzar refetch en cada acceso a la página
-  useForceRefetch()
+  // Manejar fetch basado en tipo de navegación
+  useNavigationFetch()
+
+  // Filtros persistentes
+  const { filters, hasAppliedFilters, updateFilters, clearFilters } = usePersistentFilters({
+    search: "",
+    min_duration_hours: 1,
+    max_duration_hours: 24,
+  })
+
+  // Fetch filter options
+  const { data: locations } = useQuery({
+    queryKey: ['peru-out-excel-locations'],
+    queryFn: () => TourExcelService.getLocations(),
+  })
+
+  const { data: tourTypes } = useQuery({
+    queryKey: ['peru-out-excel-types'],
+    queryFn: () => TourExcelService.getTourTypes(),
+  })
+
+  const { data: languages } = useQuery({
+    queryKey: ['peru-out-excel-languages'],
+    queryFn: () => TourExcelService.getLanguages(),
+  })
+
+  const { data: priceStats } = useQuery({
+    queryKey: ['peru-out-excel-price-stats'],
+    queryFn: () => TourExcelService.getPriceStats(),
+  })
 
   // Fetch international tours with pagination
   const {
@@ -47,21 +62,13 @@ export default function PeruOutPage() {
     queryKey: ['tours-excel', 'international', filters, currentPage],
     queryFn: () => TourExcelService.getTours(filters, currentPage, itemsPerPage),
     retry: 3,
-    refetchOnWindowFocus: true,
   })
-
-  // Fetch cities for international tours
-  const { data: cities = [] } = useQuery({
-    queryKey: ['excel-locations'],
-    queryFn: TourExcelService.getLocations,
-    refetchOnWindowFocus: true,
-  });
 
   const tours = toursData?.items || []
   const totalTours = toursData?.total || 0
 
   const handleSearch = () => {
-    setFilters((prev: TourFilters) => ({ ...prev, search: searchInput.trim() }));
+    updateFilters({ ...filters, search: searchInput.trim() });
     setCurrentPage(1); // Reset to first page when searching
   }
 
@@ -133,10 +140,13 @@ export default function PeruOutPage() {
           </div>
 
           <div className="mb-8">
-            <FilterPopup 
+            <ToursExcelFilters 
               filters={filters}
-              onFiltersChange={setFilters}
-              cities={cities}
+              onFiltersChange={updateFilters}
+              locations={locations}
+              tourTypes={tourTypes}
+              languages={languages}
+              priceStats={priceStats}
             />
           </div>
 
@@ -162,11 +172,7 @@ export default function PeruOutPage() {
                     No hay tours disponibles con los filtros seleccionados.
                   </p>
                   <Button onClick={() => {
-                    setFilters({
-                      city: "", search: "", category: "", duration: undefined, destination: "",
-                      starting_point: "", min_price: undefined, max_price: undefined,
-                      min_rating: undefined, services: [],
-                    });
+                    clearFilters();
                     setSearchInput("");
                   }}>
                     Limpiar filtros

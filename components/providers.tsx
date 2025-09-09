@@ -12,11 +12,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
     () => new QueryClient({
       defaultOptions: {
         queries: {
-          staleTime: 0, // Always consider data stale to force refetch
-          cacheTime: 5 * 60 * 1000, // Keep in cache for 5 minutes
-          refetchOnWindowFocus: true,
-          refetchOnMount: true,
+          staleTime: 0, // Always consider data stale for fresh fetches
+          cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+          refetchOnWindowFocus: false, // Don't refetch on window focus to avoid issues
+          refetchOnMount: true, // Always refetch on mount for fresh data
           refetchOnReconnect: true,
+          retryOnMount: true, // Retry failed queries on mount
+          retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
           retry: (failureCount, error: any) => {
             // Don't retry on authentication errors
             if (error?.message?.includes('JWT') || error?.message?.includes('auth')) {
