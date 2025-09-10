@@ -118,37 +118,11 @@
   z-index: 10 !important;
 }
 
-/* Fix para el desplazamiento horizontal en móviles */
-html, body {
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
-/* Asegura que el contenido no se desborde en móviles */
-.container, .container-fluid {
-  width: 100%;
-  padding-right: 1rem;
-  padding-left: 1rem;
-  margin-right: auto;
-  margin-left: auto;
-}
-
-/* Asegura que las imágenes sean responsivas */
-img {
-  max-width: 100%;
-  height: auto;
-}
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    box-sizing: border-box;
   }
-  
   body {
     @apply bg-background text-foreground;
-    position: relative;
-    width: 100%;
-    overflow-x: hidden;
   }
 }

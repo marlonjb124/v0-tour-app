@@ -41,8 +41,8 @@ export default function Navigation() {
             <Link href="/tickets" className="text-sm font-medium hover:text-primary transition-colors">
               Tickets
             </Link>
-            <Link href="/mapa-interactivo" className="text-muted-foreground transition-colors hover:text-foreground">
-              Mapa del Perú interactivo
+            <Link href="/mapa-interactivo" className="text-sm font-medium hover:text-primary transition-colors">
+              Mapa
             </Link>
           </div>
 

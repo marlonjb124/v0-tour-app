@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { TourExcelService } from "@/services/tour-excel-service"
-import { TourExcel } from "@/lib/types-excel"
+import { TourExcel, PaginatedResponse } from "@/lib/types-excel"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -60,9 +60,11 @@ export default function PeruInPage() {
     error,
     refetch
   } = useQuery({
-    queryKey: ['tours-excel', 'domestic', filters, currentPage],
+    queryKey: ['tours-excel', 'domestic', JSON.stringify(filters), currentPage],
     queryFn: () => TourExcelService.getTours(filters, currentPage, itemsPerPage),
     retry: 3,
+    refetchOnMount: true,
+    staleTime: 0
   })
 
   const tours = toursData?.items || []
@@ -186,7 +188,7 @@ export default function PeruInPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 px-1 md:px-0">
-              {tours.map((tour) => (
+              {tours.map((tour: TourExcel) => (
                 <TiqetsCard key={tour.id} tour={tour} />
               ))}
             </div>

@@ -75,59 +75,55 @@ const CityFilterGrid = ({ cities, cityImages, selectedCity, onCityChange }: {
       {/* Contenedor de filtros */}
       <div 
         ref={scrollContainerRef}
-        className="overflow-x-auto scrollbar-hide px-6"
+        className="overflow-x-auto scrollbar-hide px-2"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        <div className="flex gap-3 pb-2">
+        <div className="flex gap-2 pb-2">
           {/* Botón "Todos" */}
-        <Button
-          variant={selectedCity === "" ? "default" : "outline"}
-            className={`
-              flex-shrink-0 rounded-full px-6 py-2 shadow-sm border transition-all duration-200
-              ${selectedCity === "" 
-                ? "bg-primary text-primary-foreground border-primary shadow-md" 
-                : "bg-white hover:bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300"
-              }
-            `}
-          onClick={() => onCityChange("")}
-        >
-          <div className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-400 to-blue-600" />
-              <span className="font-medium">Todos</span>
-          </div>
-        </Button>
-
-          {/* Botones de ciudades */}
-          {cities.map((city) => (
           <Button
-            key={city}
-            variant={selectedCity === city ? "default" : "outline"}
-              className={`
-                flex-shrink-0 rounded-full px-6 py-2 shadow-sm border transition-all duration-200
-                ${selectedCity === city 
-                  ? "bg-primary text-primary-foreground border-primary shadow-md" 
-                  : "bg-white hover:bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300"
-                }
-              `}
-            onClick={() => onCityChange(city)}
+            variant="outline"
+            className={`
+              flex-shrink-0 rounded-full px-4 py-2 shadow-sm border transition-all duration-200
+              text-base font-semibold cursor-pointer
+              border-primary
+              ${selectedCity === "" 
+                ? "border-2 text-primary bg-white" 
+                : "border border-gray-200 text-gray-700 bg-white"
+              }
+              hover:border-primary hover:text-primary hover:bg-primary/10
+            `}
+            style={{ cursor: 'pointer' }}
+            onClick={() => onCityChange("")}
           >
             <div className="flex items-center gap-2">
-              <img 
-                src={cityImages[city] || '/images/default-city.png'} 
-                alt={city}
-                  className="w-5 h-5 rounded-full object-cover ring-1 ring-white/20"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  target.nextElementSibling?.classList.remove('hidden');
-                }}
-              />
-                <div className="w-5 h-5 rounded-full bg-gradient-to-br from-gray-300 to-gray-500 hidden" />
-                <span className="font-medium">{city}</span>
+              
+              <span className="font-semibold text-base">Todos</span>
             </div>
           </Button>
-        ))}
-      </div>
+          {/* Botones de ciudades */}
+          {cities.map((city) => (
+            <Button
+              key={city}
+              variant="outline"
+              className={`
+                flex-shrink-0 rounded-full px-6 py-3 shadow-sm border-2 transition-all duration-300 ease-in-out
+                text-lg font-semibold cursor-pointer transform hover:scale-105
+                ${selectedCity === city 
+                  ? "border-primary text-primary bg-white ring-2 ring-primary/20"
+                  : "border-gray-300 text-gray-800 bg-white"
+                }
+                hover:border-primary hover:text-primary hover:bg-white
+              `}
+              style={{ cursor: 'pointer' }}
+              onClick={() => onCityChange(city)}
+            >
+              <div className="flex items-center gap-2">
+
+                <span className="font-semibold text-lg">{city}</span>
+              </div>
+            </Button>
+          ))}
+        </div>
       </div>
 
       {/* Botón de navegación derecha */}
@@ -337,7 +333,7 @@ const FeatureCardsCarousel = () => {
 // City images mapping
 const cityImages: Record<string, string> = {
   'Arequipa': '/santa-catalina-monastery-arequipa-colonial-archite.png',
-  'Barcelona': '/sagrada-familia-barcelona-architecture.png',
+  'Barcelona': '/barcelona-tourist-bus-red-double-decker.png',
   'Cusco': '/machu-picchu-sunrise-andes-mountains-peru.png',
   'Lima': '/lima-historic-center-colonial-architecture-cathedr.png',
   'Madrid': '/museo-del-prado-madrid-art-gallery.png',
